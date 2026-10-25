@@ -241,6 +241,25 @@ button:focus-visible{outline:3px solid rgba(36,71,154,.45);outline-offset:2px}
         <label><input type="checkbox" id="anexoLesion" /> Confirmo que se anexa la imagen de la lesión con su informe. <span class="req">*</span></label>
       </div>
     </div>
+    <div class="full note info" style="margin:0">
+      <label style="color:var(--azul);font-size:.95rem">¿El paciente presenta un posoperatorio inmediato o temprano, o una complicación confirmada relacionada con una cirugía previa? <span class="req">*</span></label>
+      <div class="seg">
+        <input type="radio" name="posoperatorio" id="posop-no" value="No" required><label for="posop-no">No</label>
+        <input type="radio" name="posoperatorio" id="posop-si" value="Sí" required><label for="posop-si">Sí</label>
+      </div>
+      <div class="hint">Criterio independiente de la lesión que requiere drenaje o desbridamiento. Para este formulario, inmediato/temprano comprende los primeros 7 días desde la cirugía. Una complicación confirmada relacionada con la cirugía puede corresponder aunque hayan transcurrido más de 7 días. Si responde Sí, complete los datos de la cirugía.</div>
+      <div class="grid" id="posopWrap" style="display:none;margin-top:10px">
+        <div><label for="fechaCirugia">Fecha de la cirugía <span class="req">*</span></label><input type="date" id="fechaCirugia" /></div>
+        <div><label for="especialidadQx">Especialidad responsable de la cirugía <span class="req">*</span></label>
+          <select id="especialidadQx"><option value="">Seleccione…</option><option value="Urología">Urología</option><option value="Traumatología">Traumatología</option><option value="Cirugía General y Trauma">Cirugía General y Trauma</option><option value="Otra especialidad quirúrgica">Otra especialidad quirúrgica (tórax, neurocirugía, cabeza y cuello, mastología u otras)</option></select>
+        </div>
+        <div class="full"><label for="procedimientoQx">Tipo de cirugía o procedimiento <span class="req">*</span></label><input type="text" id="procedimientoQx" placeholder="Describa la cirugía o procedimiento realizado" /></div>
+        <div class="full"><label>¿Presenta una complicación relacionada con la cirugía? <span class="req">*</span></label>
+          <div class="seg"><input type="radio" name="complicacionQx" id="compqx-no" value="No"><label for="compqx-no">No</label><input type="radio" name="complicacionQx" id="compqx-si" value="Sí"><label for="compqx-si">Sí</label></div>
+        </div>
+        <div class="full" id="clasifPosop" style="display:none"></div>
+      </div>
+    </div>
     <div class="full"><label for="especialidad">Resultado de la Cartera de Servicios (asignación automática) <span class="req">*</span></label>
       <input type="text" id="especialidad" value="" placeholder="Se determinará automáticamente según el diagnóstico" readonly required aria-readonly="true" />
       <div class="hint" id="carteraHint">La especialidad se determinará automáticamente a partir del diagnóstico. Este campo no se puede modificar manualmente.</div></div>
@@ -442,7 +461,7 @@ function collect(){
     creatinina: radio('tieneLab')==='Sí'?v('creat'):'', diuresis: radio('tieneLab')==='Sí'?v('diuresis'):'',
     news2:N.total, news2_riesgo:N.texto, news2_incompleto:N.miss.join(', '),
     sofa: S.n?S.total:'', sofa_componentes: S.n+'/6', sofa_detalle: Object.entries(S.c).map(([k,x])=>k+' '+x.s+' ('+x.t+')').join('; '),
-    motivo:v('motivo'), especialidad:v('especialidad'), criterio_cartera:(cartera()||{}).criterio||'', lesion_piel_partes_blandas_drenaje:radio('lesionDrenaje'), anexa_imagen_informe_lesion:$('anexoLesion').checked?'Confirmado':'No confirmado', observacion_no_cartera:v('obsCartera'), rea:radio('rea'), imagenes: radio('imagenes')==='Sí' ? 'Sí — adjunto, enviado aparte' : radio('imagenes'), laboratorios: radio('laboratorios')==='Sí' ? 'Sí — adjunto, enviado aparte' : radio('laboratorios'),
+    motivo:v('motivo'), especialidad:v('especialidad'), criterio_cartera:(cartera()||{}).criterio||'', posoperatorio:radio('posoperatorio'), fecha_cirugia:v('fechaCirugia'), dias_posoperatorio:calcularDiasPosop(), especialidad_cirugia:v('especialidadQx'), procedimiento_cirugia:v('procedimientoQx'), complicacion_postquirurgica:radio('complicacionQx'), clasificacion_posoperatorio:clasificacionPosop(), lesion_piel_partes_blandas_drenaje:radio('lesionDrenaje'), anexa_imagen_informe_lesion:$('anexoLesion').checked?'Confirmado':'No confirmado', observacion_no_cartera:v('obsCartera'), rea:radio('rea'), imagenes: radio('imagenes')==='Sí' ? 'Sí — adjunto, enviado aparte' : radio('imagenes'), laboratorios: radio('laboratorios')==='Sí' ? 'Sí — adjunto, enviado aparte' : radio('laboratorios'),
     tecnicas_qx: radio('tecnicas')==='Sí' ? 'Sí — adjunto, enviado aparte' : radio('tecnicas'), procedimientos_previos:radio('procedimientos'),
     medico:v('medico'), telefono:v('telefono'), hora_presentacion:v('hora'), institucion:v('institucion'),
     _news:N, _sofa:S
@@ -452,6 +471,8 @@ function validar(){
   const req=[...document.querySelectorAll('#f [required]')]; let first=null;
   req.forEach(el=>{ if(!el.value.trim()){ el.classList.add('invalid'); first=first||el; } });
   if(!radio('lesionDrenaje')){ const el=$('lesion-si').closest('.full'); el.scrollIntoView({behavior:'smooth',block:'center'}); toast('Indicá Sí o No en lesión de piel y partes blandas'); return false; }
+  if(!radio('posoperatorio')){ $('posop-si').closest('.full').scrollIntoView({behavior:'smooth',block:'center'}); toast('Indicá Sí o No en posoperatorio o complicación quirúrgica'); return false; }
+  if(radio('posoperatorio')==='Sí'){ const reqQx=['fechaCirugia','especialidadQx','procedimientoQx']; for(const id of reqQx){if(!$(id).value.trim()){ $(id).classList.add('invalid'); $(id).scrollIntoView({behavior:'smooth',block:'center'}); $(id).focus({preventScroll:true}); toast('Completá los datos de la cirugía'); return false;}} if(!radio('complicacionQx')){ $('compqx-si').closest('.full').scrollIntoView({behavior:'smooth',block:'center'}); toast('Indicá si existe una complicación relacionada con la cirugía'); return false; }}
   if(radio('lesionDrenaje')==='Sí'&&!$('anexoLesion').checked){ $('anexoLesion').classList.add('invalid'); $('anexoLesion').scrollIntoView({behavior:'smooth',block:'center'}); toast('Es obligatorio anexar la imagen de la lesión con su informe'); return false; }
   actualizarObservacionCartera();
   if($('especialidad').value===NC&&!$('obsCartera').value.trim()){ $('obsCartera').classList.add('invalid'); $('obsCartera').scrollIntoView({behavior:'smooth',block:'center'}); $('obsCartera').focus({preventScroll:true}); toast('Definí por qué solicita la derivación a Ingavi'); return false; }
@@ -544,6 +565,8 @@ async function buildPDF(d){
   sec('SOLICITUD DE TRASLADO',[
     [L('Diagnóstico / motivo de derivación'),V(d.motivo,3)],
     [L('Lesión de piel y partes blandas con imagen que indique necesidad de drenaje o desbridamiento'),V(d.lesion_piel_partes_blandas_drenaje),L('Imagen e informe anexos'),V(d.lesion_piel_partes_blandas_drenaje==='Sí'?d.anexa_imagen_informe_lesion:'No corresponde')],
+    [L('Posoperatorio reciente / complicación de cirugía previa'),V(d.posoperatorio),L('Fecha de cirugía / días transcurridos'),V(d.fecha_cirugia?d.fecha_cirugia+' / '+d.dias_posoperatorio+' día(s)':'No corresponde')],
+    ...(d.posoperatorio==='Sí' ? [[L('Especialidad responsable de cirugía'),V(d.especialidad_cirugia),L('Clasificación temporal'),V(d.clasificacion_posoperatorio)],[L('Cirugía o procedimiento realizado'),V(d.procedimiento_cirugia,3)],[L('Complicación relacionada con cirugía'),V(d.complicacion_postquirurgica,3)]] : []),
     [L('Especialidad (según Cartera de Servicios)'),V(d.especialidad+(d.rea==='Sí'?' + Reanimación (REA)':''),3)],
     ...(d.observacion_no_cartera ? [[L('Observación: solicito derivar a Ingavi por la siguiente razón'),V(d.observacion_no_cartera,3)]] : []),
     [L('Imágenes'),V(d.imagenes),L('Laboratorios'),V(d.laboratorios)],
@@ -646,11 +669,43 @@ function textoDx(){ return ($('motivo').value+' || '+$('dato').value).toLowerCas
 function cartera(){
   if(radio('lesionDrenaje')==='Sí') return {servicio:PV, criterio:'Lesión de piel y partes blandas con imagen que indica necesidad de drenaje o desbridamiento'};
   const f=fueraDeCartera(); if(f.length) return {servicio:NC, criterio:'HEQI no cuenta con '+f.join(' ni ')};
+  if(radio('posoperatorio')==='Sí'){
+    const dias=calcularDiasPosop(), esp=$('especialidadQx').value, complicacion=radio('complicacionQx')==='Sí';
+    const servicio=({ 'Urología':UR, 'Traumatología':TR, 'Cirugía General y Trauma':CG })[esp];
+    if(complicacion || (dias!==null && dias<=7)){ const destino=servicio||PV; return {servicio:destino, criterio:(complicacion?'Complicación confirmada relacionada con cirugía previa':'Posoperatorio inmediato/temprano (hasta 7 días)')+' — '+esp+'; '+(dias===null?'antigüedad no calculada':dias+' día(s) desde la cirugía')+(servicio?'':' — derivación a Polivalente por cirugía de otra especialidad')}; }
+  }
   const partes=[$('motivo').value,$('dato').value].map(t=>t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''));
   for(const t of partes){ if(!t.trim())continue; for(const [re,fn] of REGLAS){ if(re.test(t)){ const [servicio,criterio]=fn(); return {servicio,criterio}; } } }
   if(partes.some(t=>t.trim())) return {servicio:NC, criterio:'El diagnóstico no se identifica en la Cartera de Servicios de HEQI'};
   return null;
 }
+function calcularDiasPosop(){
+  const f=$('fechaCirugia')?.value; if(!f) return null;
+  const inicio=new Date(f+'T00:00:00'); const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const d=Math.floor((hoy-inicio)/86400000); return Number.isFinite(d)&&d>=0?d:null;
+}
+function clasificacionPosop(){
+  const d=calcularDiasPosop(); if(d===null) return '';
+  if(d===0) return 'Día de la cirugía';
+  if(d<=1) return 'Posoperatorio inmediato (día 0–1; fecha sin hora exacta)';
+  if(d<=7) return 'Posoperatorio temprano (días 2–7)';
+  return 'Posoperatorio posterior a los primeros 7 días';
+}
+function actualizarPosop(){
+  const si=radio('posoperatorio')==='Sí', wrap=$('posopWrap'); wrap.style.display=si?'':'none';
+  ['fechaCirugia','especialidadQx','procedimientoQx'].forEach(id=>$(id).required=si);
+  document.querySelectorAll('input[name=complicacionQx]').forEach(el=>el.required=si);
+  if(!si){ $('fechaCirugia').value=''; $('especialidadQx').value=''; $('procedimientoQx').value=''; document.querySelectorAll('input[name=complicacionQx]').forEach(el=>el.checked=false); }
+  const d=calcularDiasPosop(), out=$('clasifPosop');
+  out.style.display=si&&d!==null?'block':'none';
+  out.className='full hint '+(d!==null&&d>7?'mal':'ok');
+  out.textContent=si&&d!==null?('Antigüedad: '+d+' día(s). Clasificación orientativa: '+clasificacionPosop()+'. La clasificación temporal no excluye por sí sola una complicación tardía.') : '';
+  aplicarCartera();
+}
+['posop-no','posop-si'].forEach(id=>$(id).addEventListener('change',actualizarPosop));
+['fechaCirugia','especialidadQx','procedimientoQx'].forEach(id=>$(id).addEventListener('input',actualizarPosop));
+document.querySelectorAll('input[name=complicacionQx]').forEach(el=>el.addEventListener('change',actualizarPosop));
+
 function aplicarCartera(){
   const c=cartera(), h=$('carteraHint');
   if(c){ $('especialidad').value=c.servicio;
@@ -726,7 +781,7 @@ $('bShare').addEventListener('click',async()=>{
 });
 $('bLimpiar').addEventListener('click',()=>{
   if(!confirm('¿Borrar todos los datos del formulario?'))return;
-  $('f').reset(); espManual=false; $('especialidad').disabled=true; toggleImg(); revisarCartera(); actualizarAnexoLesion(); aplicarCartera(); actualizarObservacionCartera(); fio2Manual=false; estimarFio2(); $('labWrap').style.display='none'; $('vasoWrap').style.display='none'; avdiManual=false; lastDoc=null;
+  $('f').reset(); espManual=false; $('especialidad').disabled=true; toggleImg(); revisarCartera(); actualizarAnexoLesion(); actualizarPosop(); aplicarCartera(); actualizarObservacionCartera(); fio2Manual=false; estimarFio2(); $('labWrap').style.display='none'; $('vasoWrap').style.display='none'; avdiManual=false; lastDoc=null;
   $('avdiHint').textContent='Se completa desde el Glasgow; podés corregirlo.';
   document.querySelectorAll('.invalid').forEach(e=>e.classList.remove('invalid'));
   $('done').classList.remove('show'); setHora(); actualizarAnexoLesion(); aplicarCartera(); calc(); window.scrollTo({top:0,behavior:'smooth'});
