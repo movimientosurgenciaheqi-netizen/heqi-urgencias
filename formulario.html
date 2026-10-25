@@ -33,6 +33,7 @@ header .sub{color:var(--gris);margin:0 0 14px;font-size:1.02rem}
 .nocontamos li:first-child{border-top:none}
 .nocontamos li::before{content:"✕";position:absolute;left:4px;font-weight:900}
 .nocontamos .auto{margin-top:10px;background:#fff;color:#b3261e;border-radius:10px;padding:9px 11px;font-weight:900;font-size:.95rem}
+.hint.ok{color:#2f7d4f;font-weight:700}.hint.mal{color:#b3261e;font-weight:700}
 .alerta-cartera{display:none;background:#fdecea;border:2px solid #b3261e;color:#8c1d16;border-radius:12px;padding:10px 12px;font-weight:800;font-size:.95rem}
 .note.list{border:1px solid var(--linea)}
 .note.list h3{color:var(--azul);margin:0 0 6px;font-size:1.05rem;font-weight:900;text-transform:uppercase}
@@ -117,7 +118,7 @@ button:focus-visible{outline:3px solid rgba(36,71,154,.45);outline-offset:2px}
 <div class="nocontamos" role="alert">
   <h3>⛔ HEQI NO CUENTA CON:</h3>
   <ul>
-    <li>Endoscopia de urgencia ni ambulatoria (HDA, gastrostomía)</li>
+    <li>Endoscopia de urgencia ni ambulatoria (HDA inestable, gastrostomía)</li>
     <li>Drenaje percutáneo (radiología intervencionista)</li>
     <li>Angiografía / hemodinamia (diagnóstica o terapéutica)</li>
     <li>Cirugía mínimamente invasiva</li>
@@ -228,8 +229,19 @@ button:focus-visible{outline:3px solid rgba(36,71,154,.45);outline-offset:2px}
 <section>
   <h2>Solicitud de traslado</h2>
   <div class="grid">
-    <div class="full"><label for="motivo">Motivo quirúrgico de derivación <span class="req">*</span></label><textarea id="motivo" required></textarea></div>
-    <div class="full"><label for="especialidad">Especialidad quirúrgica solicitada <span class="req">*</span></label><input type="text" id="especialidad" required></div>
+    <div class="full"><label for="motivo">Diagnóstico / motivo de derivación <span class="req">*</span></label><textarea id="motivo" required placeholder="Ej.: apendicitis aguda, fractura expuesta de tibia, urosepsis obstructiva…"></textarea></div>
+    <div class="full"><label for="especialidad">Especialidad que corresponde (según Cartera de Servicios) <span class="req">*</span></label>
+      <select id="especialidad" required>
+        <option value="">– Se elige sola según el diagnóstico –</option>
+        <option value="Polivalente">Polivalente</option>
+        <option value="Traumatología">Traumatología</option>
+        <option value="Cirugía General y Trauma">Cirugía General y Trauma</option>
+        <option value="Urología">Urología</option>
+        <option value="NO CORRESPONDE (fuera de cartera)">NO CORRESPONDE (fuera de cartera)</option>
+      </select>
+      <div class="hint" id="carteraHint">Escribí el diagnóstico y la especialidad se completa sola.</div></div>
+    <div class="full"><label>¿Solicita Reanimación (REA) por gravedad?</label>
+      <div class="seg"><input type="radio" name="rea" id="rea-no" value="No" checked><label for="rea-no">No</label><input type="radio" name="rea" id="rea-si" value="Sí"><label for="rea-si">Sí</label></div></div>
     <div class="full alerta-cartera" id="alertaCartera" role="alert"></div>
     <div><label>Imágenes</label><div class="seg"><input type="radio" name="imagenes" id="img-no" value="No"><label for="img-no">No</label><input type="radio" name="imagenes" id="img-si" value="Sí"><label for="img-si">Sí</label></div></div>
     <div><label>Laboratorios</label><div class="seg"><input type="radio" name="laboratorios" id="lab-no" value="No"><label for="lab-no">No</label><input type="radio" name="laboratorios" id="lab-si" value="Sí"><label for="lab-si">Sí</label></div></div>
@@ -421,7 +433,7 @@ function collect(){
     creatinina: radio('tieneLab')==='Sí'?v('creat'):'', diuresis: radio('tieneLab')==='Sí'?v('diuresis'):'',
     news2:N.total, news2_riesgo:N.texto, news2_incompleto:N.miss.join(', '),
     sofa: S.n?S.total:'', sofa_componentes: S.n+'/6', sofa_detalle: Object.entries(S.c).map(([k,x])=>k+' '+x.s+' ('+x.t+')').join('; '),
-    motivo:v('motivo'), especialidad:v('especialidad'), imagenes: radio('imagenes')==='Sí' ? 'Sí — adjunto, enviado aparte' : radio('imagenes'), laboratorios: radio('laboratorios')==='Sí' ? 'Sí — adjunto, enviado aparte' : radio('laboratorios'),
+    motivo:v('motivo'), especialidad:v('especialidad'), criterio_cartera:(cartera()||{}).criterio||'', rea:radio('rea'), imagenes: radio('imagenes')==='Sí' ? 'Sí — adjunto, enviado aparte' : radio('imagenes'), laboratorios: radio('laboratorios')==='Sí' ? 'Sí — adjunto, enviado aparte' : radio('laboratorios'),
     tecnicas_qx: radio('tecnicas')==='Sí' ? 'Sí — adjunto, enviado aparte' : radio('tecnicas'), procedimientos_previos:radio('procedimientos'),
     medico:v('medico'), telefono:v('telefono'), hora_presentacion:v('hora'), institucion:v('institucion'),
     _news:N, _sofa:S
@@ -454,17 +466,21 @@ async function buildPDF(d){
   center('HEQI: Regulación Médica de Traslados',B,15,AZ,y); y-=14;
   center('FORMULARIO DE DERIVACIÓN — USO EXCLUSIVO MÉDICO',B,8,TX,y); y-=10;
   center('Generado: '+d.fecha_envio,F,7,TX,y); y-=14;
-  // Destacado: 1) especialidad, 2) paciente
-  { const esp=safe('ESPECIALIDAD SOLICITADA: '+String(d.especialidad||'—').toUpperCase(),B);
-    const pac=safe('PACIENTE: '+(d.nombre||'—')+(d.edad?' · '+d.edad+' años':'')+(d.ci?' · CI '+d.ci:''),B);
-    const espL=wrap(esp,B,13,TW-16), pacL=wrap(pac,B,10.5,TW-16);
-    const fc=fueraDeCartera(); const alL=fc.length?wrap(safe('ATENCIÓN: posible solicitud fuera de cartera ('+fc.join(', ')+'). Admisión responde NO CORRESPONDE.',B),B,9,TW-16):[];
-    const h=espL.length*16+pacL.length*13+alL.length*11+12;
-    page.drawRectangle({x:M,y:y-h,width:TW,height:h,color:rgb(.91,.94,.98),borderColor:AZ,borderWidth:1.2});
-    let ty=y-17; espL.forEach(l=>{ page.drawText(l,{x:M+8,y:ty,size:13,font:B,color:AZ}); ty-=16; });
+  // Destacado: 1) especialidad, 2) paciente, 3) lugar de referencia
+  { const nc=String(d.especialidad||'').indexOf('NO CORRESPONDE')===0;
+    const espTxt='ESPECIALIDAD: '+String(d.especialidad||'—').toUpperCase()+(d.rea==='Sí'?' + REANIMACIÓN (REA)':'');
+    const espL=wrap(safe(espTxt,B),B,13,TW-16);
+    const criL=d.criterio_cartera?wrap(safe('Cartera de Servicios: '+d.criterio_cartera,F),F,8.5,TW-16):[];
+    const pacL=wrap(safe('PACIENTE: '+(d.nombre||'—')+(d.edad?' · '+d.edad+' años':'')+(d.ci?' · CI '+d.ci:''),B),B,10.5,TW-16);
+    const refL=wrap(safe('REFERENCIA: '+(d.institucion||'—')+(d.medico?' · '+d.medico:'')+(d.telefono?' · Tel. '+d.telefono:''),B),B,10,TW-16);
+    const h=espL.length*16+criL.length*10.5+pacL.length*13+refL.length*12.5+14;
+    const colBorde=nc?rgb(.70,.15,.12):AZ, fondo=nc?rgb(.99,.93,.92):rgb(.91,.94,.98);
+    page.drawRectangle({x:M,y:y-h,width:TW,height:h,color:fondo,borderColor:colBorde,borderWidth:1.4});
+    let ty=y-17; espL.forEach(l=>{ page.drawText(l,{x:M+8,y:ty,size:13,font:B,color:colBorde}); ty-=16; });
+    criL.forEach(l=>{ page.drawText(l,{x:M+8,y:ty+3,size:8.5,font:F,color:colBorde}); ty-=10.5; });
     pacL.forEach(l=>{ page.drawText(l,{x:M+8,y:ty+1,size:10.5,font:B,color:TX}); ty-=13; });
-    alL.forEach(l=>{ page.drawText(l,{x:M+8,y:ty+2,size:9,font:B,color:rgb(.7,.15,.12)}); ty-=11; });
-    y-=h+16; }
+    refL.forEach(l=>{ page.drawText(l,{x:M+8,y:ty+1,size:10,font:B,color:TX}); ty-=12.5; });
+    y-=h+14; }
   const L=t=>({t,lab:true}), V=(t,span)=>({t:(t===''||t==null)?'—':t,span:span||1});
   const sec=(title,rows)=>{
     if(y<120)nuevaPag();
@@ -513,8 +529,8 @@ async function buildPDF(d){
   box(S.n?('SOFA: '+S.total+' puntos ('+S.n+'/6 componentes) — '+Object.entries(S.c).map(([k,x])=>k+' '+x.s+' ('+x.t+')').join(', ')):'SOFA: sin datos suficientes', AZ);
   y-=10;
   sec('SOLICITUD DE TRASLADO',[
-    [L('Motivo quirúrgico de derivación'),V(d.motivo,3)],
-    [L('Especialidad quirúrgica solicitada'),V(d.especialidad,3)],
+    [L('Diagnóstico / motivo de derivación'),V(d.motivo,3)],
+    [L('Especialidad (según Cartera de Servicios)'),V(d.especialidad+(d.rea==='Sí'?' + Reanimación (REA)':''),3)],
     [L('Imágenes'),V(d.imagenes),L('Laboratorios'),V(d.laboratorios)],
     [L('Técnicas quirúrgicas'),V(d.tecnicas_qx),L('Procedimientos invasivos previos'),V(d.procedimientos_previos)]
   ]);
@@ -525,7 +541,7 @@ async function buildPDF(d){
   ]);
   // Recuadro rojo: HEQI no cuenta con
   { const R=rgb(.70,.15,.12);
-    const t1='HEQI NO CUENTA CON: ENDOSCOPIA DE URGENCIA NI AMBULATORIA (HDA, GASTROSTOMÍA) - DRENAJE PERCUTÁNEO - ANGIOGRAFÍA / HEMODINAMIA (DIAGNÓSTICA O TERAPÉUTICA) - CIRUGÍA MÍNIMAMENTE INVASIVA - CIRUGÍA VASCULAR COMPLEJA - CIRUGÍA PLÁSTICA Y QUEMADOS.';
+    const t1='HEQI NO CUENTA CON: ENDOSCOPIA DE URGENCIA NI AMBULATORIA (HDA INESTABLE, GASTROSTOMÍA) - DRENAJE PERCUTÁNEO - ANGIOGRAFÍA / HEMODINAMIA (DIAGNÓSTICA O TERAPÉUTICA) - CIRUGÍA MÍNIMAMENTE INVASIVA - CIRUGÍA VASCULAR COMPLEJA - CIRUGÍA PLÁSTICA Y QUEMADOS.';
     const t2='Estas solicitudes son respondidas automáticamente por Admisión como NO CORRESPONDE (fuera de cartera de servicios).';
     const l1=wrap(safe(t1,B),B,9,TW-16), l2=wrap(safe(t2,B),B,8,TW-16), h=l1.length*11.5+l2.length*10+14;
     if(y-h<26) nuevaPag();
@@ -565,16 +581,82 @@ function textoCompartir(d){
   return '🏥 '+String(d.especialidad||'Sin especialidad').toUpperCase()+' | '+(d.nombre||'')+(d.edad?', '+d.edad+' años':'')+
     '\nNEWS2 '+(N.total!=null?N.total:'—')+(N.nivel==='alto'?' (riesgo ALTO)':'')+' | '+(d.institucion||'')+' | '+(d.medico||''); }
 
+/* ===== Cartera de servicios HEQI: especialidad automática ===== */
+const PV='Polivalente', TR='Traumatología', CG='Cirugía General y Trauma', UR='Urología', NC='NO CORRESPONDE (fuera de cartera)';
+const cv=()=>radio('cardiopatia')==='Sí'||radio('valvulopatia')==='Sí';
+const n2=()=>{ const N=news2(); return N.total||0; };
+const REGLAS=[
+  // Urología (antes que trauma general: trauma urogenital aislado)
+  [/doble j|cateter doble|pig ?tail/, ()=>[UR,'Dolor renoureteral en portador de catéter doble J']],
+  [/post ?operad\w* de urolog|postoperatorio de urolog|pop de urolog/, ()=>[UR,'Dolor de herida operatoria pos operado de Urología']],
+  [/priapismo/, ()=>[UR,'Priapismo']],
+  [/parafimosis|balanopostitis|balanitis/, ()=>[UR,'Parafimosis / balanopostitis']],
+  [/trauma\w* (urogenital|renal|vesical|uretral|testicular|genital|de pene|escrotal)/, ()=>[UR,'Trauma urogenital aislado']],
+  [/cuerpo extrano (ureteral|uretral|vesical)/, ()=>[UR,'Cuerpo extraño ureteral']],
+  [/torsion (testicular|del cordon)|escroto agudo/, ()=>[UR,'Torsión testicular / escroto agudo']],
+  [/urosepsis|uro sepsis|pionefrosis|pio nefrosis|absceso (renal|perirrenal)/, ()=>[PV,'Urosepsis / pionefrosis obstructiva / absceso renal']],
+  [/retencion (aguda )?(de )?orina|globo vesical|hematuria|coagulos/, ()=> n2()>=5 ? [PV,'Retención de orina / hematuria con descompensación (NEWS2 ≥ 5) o pluripatológico'] : [UR,'Retención de orina / hematuria sin descompensación (NEWS2 < 5)']],
+  // Polivalente: cuello, neuro, infecciones, tórax
+  [/fascitis necrotizante (de|en) (la )?pared abdominal/, ()=>[CG,'Fascitis necrotizante de pared abdominal']],
+  [/fournier/, ()=>[CG,'Gangrena de Fournier (interconsulta con Urología si el foco es genital)']],
+  [/ludwig|flemon (cervical|de cuello)|absceso (retro|latero|para) ?faringeo|retrofaring|laterofaring|parafaring|fascitis necrotizante cervical|fascitis necrotizante de cuello/, ()=>[PV,'Infección profunda de cabeza y cuello']],
+  [/sinusitis/, ()=>[PV,'Sinusitis complicada con absceso subperióstico']],
+  [/acv hemorragic|hemorragia (intraparenquimatosa|intracerebral|cerebral)|hematoma (intraparenquimatoso|intracerebral|subdural)|\bhip\b/, ()=>[PV,'ACV hemorrágico (neurocirugía)']],
+  [/tumor (intracraneal|cerebral)|masa intracraneal|neoplasia cerebral|glioma|meningioma|metastasis cerebral/, ()=>[PV,'Tumor intracraneal (neurocirugía)']],
+  [/hidrocefalia/, ()=>[PV,'Hidrocefalia aguda obstructiva']],
+  [/absceso cerebral|empiema subdural/, ()=>[PV,'Absceso cerebral / empiema subdural']],
+  [/espondilodiscitis|absceso epidural/, ()=>[PV,'Espondilodiscitis con absceso epidural o déficit neurológico']],
+  [/fascitis necrotizante/, ()=>[PV,'Fascitis necrotizante']],
+  [/artritis septica|pioartros/, ()=>[PV,'Artritis séptica']],
+  [/piomiositis|absceso muscular/, ()=>[PV,'Piomiositis con absceso muscular']],
+  [/osteomielitis/, ()=>[PV,'Osteomielitis aguda con absceso subperióstico']],
+  [/celulitis|flemon|absceso (de partes blandas|glute\w*|subcutane\w*|cutane\w*|de piel)/, ()=>[PV,'Celulitis abscedada / flemón profundo']],
+  [/neumonia complicada|empiema|derrame pleural/, ()=>[PV,'Neumonía complicada con derrame / empiema']],
+  [/lesion(es)? por presion|ulcera(s)? por presion|escara/, ()=>[PV,'Lesión por presión con criterio de desbridamiento']],
+  // Cirugía General y Trauma
+  [/politrauma|poli trauma|accidente de transito|siniestro vial|arma blanca|arma de fuego|herida (penetrante|por arma)|trauma\w* (abdominal|de abdomen|toracico|de torax)/, ()=>[CG,'Paciente politraumatizado / trauma de tronco']],
+  [/melena|hematemesis|hemorragia digestiva|sangrado digestivo|\bhd[ab]\b|rectorragia|hematoquecia/, ()=> (cv()||n2()>=5) ? [NC,'Hemorragia digestiva inestable o con condicional cardiovascular: requiere endoscopia de urgencia (HEQI no cuenta)'] : [CG,'Hemorragia digestiva clínicamente estable: evaluación para programación endoscópica']],
+  [/oclusion intestinal|obstruccion intestinal|suboclusion|bridas|hernia (estrangulada|atascada|incarcerada|complicada)|volvulo/, ()=>[CG,'Síndrome de oclusión intestinal'+(cv()?' - ATENCIÓN: con condicional cardiovascular (revisar criterio)':'')]],
+  [/ictericia|coledocolitiasis|colestasis/, ()=>[CG,'Ictericia obstructiva sin colangitis'+(cv()?' - ATENCIÓN: con condicional cardiovascular (revisar criterio)':'')]],
+  [/pancreatitis/, ()=>[CG,'Pancreatitis aguda litiásica o complicada']],
+  [/embarazo ectopico|ectopico|\beip\b|enfermedad inflamatoria pelvica/, ()=>[CG,'EIP / sospecha de embarazo ectópico']],
+  [/infeccion (de|del) sitio quirurgico|\bisq\b|infeccion de (la )?herida (operatoria|quirurgica)|dehiscencia|evisceracion|abdomen abierto|laparostomia|bolsa de bogota/, ()=>[CG,'Complicación de herida / ISQ / abdomen abierto (en seguimiento por HEQI)']],
+  [/neumotorax|hemotorax/, ()=>[CG,'Neumotórax con criterios de drenaje']],
+  [/abdomen agudo|apendicitis|apendicular|colecistitis|diverticulitis|peritonitis|perforacion|viscera hueca|dolor abdominal|plastron/, ()=>[CG,'Dolor abdominal agudo quirúrgico']],
+  // Traumatología
+  [/fractura|luxacion|sindrome compartimental|protesis|tendon|tendin|ligament|herida (compleja|de mano|de miembro|cortante)|lumbalgia|lumbociatalgia|cervicalgia|dorsalgia|dolor de columna|vertebro ?medular|raquimedular|lesion medular|compresion medular|cola de caballo|hernia de disco|esguince/, ()=>[TR,'Trauma de miembros / columna']],
+];
+let espManual=false;
+function textoDx(){ return ($('motivo').value+' || '+$('dato').value).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+function cartera(){
+  const f=fueraDeCartera(); if(f.length) return {servicio:NC, criterio:'HEQI no cuenta con '+f.join(' ni ')};
+  const partes=[$('motivo').value,$('dato').value].map(t=>t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''));
+  for(const t of partes){ if(!t.trim())continue; for(const [re,fn] of REGLAS){ if(re.test(t)){ const [servicio,criterio]=fn(); return {servicio,criterio}; } } }
+  return null;
+}
+function aplicarCartera(){
+  const c=cartera(), h=$('carteraHint');
+  if(!$('motivo').value.trim()&&!$('dato').value.trim()){ h.className='hint'; h.textContent='Escribí el diagnóstico y la especialidad se completa sola.'; if(!espManual)$('especialidad').value=''; return; }
+  if(c){ if(!espManual) $('especialidad').value=c.servicio;
+    h.className='hint '+(c.servicio===NC?'mal':'ok');
+    h.textContent=(espManual&&$('especialidad').value!==c.servicio?'Elegida a mano. La cartera sugiere: '+c.servicio+'. ':'Según Cartera de Servicios: ')+c.criterio+'.'; }
+  else { if(!espManual)$('especialidad').value=''; h.className='hint mal'; h.textContent='Diagnóstico no encontrado en la Cartera de Servicios: elegí la especialidad a mano.'; }
+}
+$('especialidad').addEventListener('change',()=>{ espManual = $('especialidad').value!=='' ; const c=cartera(); if(c&&$('especialidad').value===c.servicio)espManual=false; aplicarCartera(); });
+['motivo','dato'].forEach(id=>$(id).addEventListener('input',aplicarCartera));
+document.querySelectorAll('input[name=cardiopatia],input[name=valvulopatia]').forEach(r=>r.addEventListener('change',aplicarCartera));
+['fc','fr','tas','spo2','temp','gcs'].forEach(id=>$(id).addEventListener('input',aplicarCartera));
+
 /* ===== Detección de fuera de cartera ===== */
 const FUERA=[
-  [/endoscop|\bveda\b|colonoscop|gastroscop|\bcpre\b|rectosigmoidoscop|fibrobroncoscop|broncoscop|hemorragia digestiva|sangrado digestivo|\bhd[ab]\b|hematemesis|melena|varices esofagic|gastrostom|\bpeg\b/,'endoscopia de urgencia ni ambulatoria (incluye HDA y gastrostomía)'],
+  [/endoscop|\bveda\b|colonoscop|gastroscop|\bcpre\b|rectosigmoidoscop|fibrobroncoscop|broncoscop|varices esofagic|gastrostom|\bpeg\b/,'endoscopia de urgencia ni ambulatoria (incluye gastrostomía)'],
   [/percutane|radiologia intervencionista|intervencionismo/,'drenaje percutáneo (radiología intervencionista)'],
   [/angiograf|arteriograf|flebograf|hemodinamia|cateterismo|coronariograf|angioplast|emboliza|trombectomia mecanica|trombectomia endovascular|terapia endovascular/,'angiografía / hemodinamia (diagnóstica o terapéutica)'],
   [/laparoscop|toracoscop|minima(mente)? invasiv|videolaparo|\bvats\b/,'cirugía mínimamente invasiva'],
   [/cirugia vascular|vascular periferic|endovascular|aneurism|bypass|by-pass|isquemia arterial|diseccion aortica|diseccion de aorta|sindrome aortico|fistula arteriovenosa|\bfav\b/,'cirugía vascular compleja'],
   [/quemad|cirugia plastica|\bplastica\b|colgajo|injerto de piel/,'cirugía plástica y quemados']];
 function fueraDeCartera(){
-  const t=['motivo','especialidad','dato'].map(id=>$(id).value).join(' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const t=['motivo','dato'].map(id=>$(id).value).join(' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   return FUERA.filter(([re])=>re.test(t)).map(([,n])=>n);
 }
 function revisarCartera(){
@@ -582,7 +664,7 @@ function revisarCartera(){
   el.style.display=f.length?'block':'none';
   el.textContent=f.length?'⛔ HEQI no cuenta con '+f.join(' ni ')+'. Admisión responderá automáticamente NO CORRESPONDE (fuera de cartera). Derivá a un centro que lo tenga.':'';
 }
-['motivo','especialidad','dato'].forEach(id=>$(id).addEventListener('input',revisarCartera));
+['motivo','dato'].forEach(id=>$(id).addEventListener('input',revisarCartera));
 
 /* ===== Aviso de anexos ===== */
 const ANEXOS={imagenes:'imágenes',laboratorios:'laboratorio',tecnicas:'técnicas quirúrgicas'};
@@ -613,7 +695,7 @@ $('bShare').addEventListener('click',async()=>{
 });
 $('bLimpiar').addEventListener('click',()=>{
   if(!confirm('¿Borrar todos los datos del formulario?'))return;
-  $('f').reset(); toggleImg(); revisarCartera(); fio2Manual=false; estimarFio2(); $('labWrap').style.display='none'; $('vasoWrap').style.display='none'; avdiManual=false; lastDoc=null;
+  $('f').reset(); espManual=false; toggleImg(); revisarCartera(); aplicarCartera(); fio2Manual=false; estimarFio2(); $('labWrap').style.display='none'; $('vasoWrap').style.display='none'; avdiManual=false; lastDoc=null;
   $('avdiHint').textContent='Se completa desde el Glasgow; podés corregirlo.';
   document.querySelectorAll('.invalid').forEach(e=>e.classList.remove('invalid'));
   $('done').classList.remove('show'); setHora(); calc(); window.scrollTo({top:0,behavior:'smooth'});
