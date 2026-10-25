@@ -229,7 +229,7 @@ button:focus-visible{outline:3px solid rgba(36,71,154,.45);outline-offset:2px}
 <section>
   <h2>Solicitud de traslado</h2>
   <div class="grid">
-    <div class="full"><label for="motivo">Diagnóstico / motivo de derivación <span class="req">*</span></label><textarea id="motivo" required placeholder="Ej.: apendicitis aguda, fractura expuesta de tibia, urosepsis obstructiva…"></textarea></div>
+    <div class="full"><label for="motivo">Diagnóstico explícito principal de la derivación <span class="req">*</span></label><textarea id="motivo" required placeholder="Indique el diagnóstico clínico principal de forma específica. Ej.: litiasis ureteral obstructiva, fractura expuesta de tibia, apendicitis aguda complicada…"></textarea><div class="hint">Escriba el diagnóstico principal de manera clara y específica; evite motivos generales o síntomas aislados cuando exista un diagnóstico definido.</div></div>
     <div class="full note info" style="margin:0">
       <label style="color:var(--azul);font-size:.95rem">¿Lesión de piel y partes blandas con imagen que indique necesidad de drenaje o debridamiento? <span class="req">*</span></label>
       <div class="seg">
@@ -563,7 +563,7 @@ async function buildPDF(d){
   box(S.n?('SOFA: '+S.total+' puntos ('+S.n+'/6 componentes) — '+Object.entries(S.c).map(([k,x])=>k+' '+x.s+' ('+x.t+')').join(', ')):'SOFA: sin datos suficientes', AZ);
   y-=10;
   sec('SOLICITUD DE TRASLADO',[
-    [L('Diagnóstico / motivo de derivación'),V(d.motivo,3)],
+    [L('Diagnóstico explícito principal de la derivación'),V(d.motivo,3)],
     [L('Lesión de piel y partes blandas con imagen que indique necesidad de drenaje o desbridamiento'),V(d.lesion_piel_partes_blandas_drenaje),L('Imagen e informe anexos'),V(d.lesion_piel_partes_blandas_drenaje==='Sí'?d.anexa_imagen_informe_lesion:'No corresponde')],
     [L('Posoperatorio reciente / complicación de cirugía previa'),V(d.posoperatorio),L('Fecha de cirugía / días transcurridos'),V(d.fecha_cirugia?d.fecha_cirugia+' / '+d.dias_posoperatorio+' día(s)':'No corresponde')],
     ...(d.posoperatorio==='Sí' ? [[L('Especialidad responsable de cirugía'),V(d.especialidad_cirugia),L('Clasificación temporal'),V(d.clasificacion_posoperatorio)],[L('Cirugía o procedimiento realizado'),V(d.procedimiento_cirugia,3)],[L('Complicación relacionada con cirugía'),V(d.complicacion_postquirurgica,3)]] : []),
