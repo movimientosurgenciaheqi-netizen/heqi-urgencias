@@ -26,6 +26,14 @@ header .sub{color:var(--gris);margin:0 0 14px;font-size:1.02rem}
 .note{border-radius:14px;padding:14px 18px;margin-bottom:14px;font-size:1rem}
 .note.info{background:var(--info);border:1px solid #cdd9ee;color:var(--azul)}
 .note.warn{background:var(--rojo-bg);border:1px solid #e6b9b1;color:var(--rojo)}
+.nocontamos{background:#b3261e;color:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px;box-shadow:0 2px 0 #7f1a14}
+.nocontamos h3{margin:0 0 8px;font-size:1.15rem;font-weight:900;letter-spacing:.02em}
+.nocontamos ul{margin:0;padding:0;list-style:none}
+.nocontamos li{padding:5px 0 5px 28px;position:relative;font-weight:700;font-size:1.02rem;border-top:1px solid rgba(255,255,255,.25)}
+.nocontamos li:first-child{border-top:none}
+.nocontamos li::before{content:"✕";position:absolute;left:4px;font-weight:900}
+.nocontamos .auto{margin-top:10px;background:#fff;color:#b3261e;border-radius:10px;padding:9px 11px;font-weight:900;font-size:.95rem}
+.alerta-cartera{display:none;background:#fdecea;border:2px solid #b3261e;color:#8c1d16;border-radius:12px;padding:10px 12px;font-weight:800;font-size:.95rem}
 .note.list{border:1px solid var(--linea)}
 .note.list h3{color:var(--azul);margin:0 0 6px;font-size:1.05rem;font-weight:900;text-transform:uppercase}
 .note.list ul{list-style:none;margin:0;padding:0;color:#4a5f8f}
@@ -106,7 +114,18 @@ button:focus-visible{outline:3px solid rgba(36,71,154,.45);outline-offset:2px}
 <div id="jsEstado" class="note warn" style="font-weight:700">⚠️ El cálculo automático y el PDF no están funcionando en este visor. Abrí el formulario desde el enlace en Chrome.</div>
 
 <div class="note info">Puede tardar unos minutos, ya que es recepcionado por médicos de guardia asistencial (pueden estar en consultas o procedimientos).</div>
-<div class="note warn">No contamos con quirófano para cirugía vascular compleja, cirugía plástica y quemados, ni mínima invasiva.<br><strong>No contamos con endoscopia de urgencia.</strong></div>
+<div class="nocontamos" role="alert">
+  <h3>⛔ HEQI NO CUENTA CON:</h3>
+  <ul>
+    <li>Endoscopia de urgencia ni ambulatoria (HDA, gastrostomía)</li>
+    <li>Drenaje percutáneo (radiología intervencionista)</li>
+    <li>Angiografía / hemodinamia (diagnóstica o terapéutica)</li>
+    <li>Cirugía mínimamente invasiva</li>
+    <li>Cirugía vascular compleja (aneurisma de aorta)</li>
+    <li>Cirugía plástica y quemados</li>
+  </ul>
+  <div class="auto">Estas solicitudes son respondidas automáticamente por Admisión como NO CORRESPONDE (fuera de cartera de servicios).</div>
+</div>
 <div class="note list">
   <h3>El ingreso de pacientes es por la urgencia</h3>
   <ul>
@@ -211,6 +230,7 @@ button:focus-visible{outline:3px solid rgba(36,71,154,.45);outline-offset:2px}
   <div class="grid">
     <div class="full"><label for="motivo">Motivo quirúrgico de derivación <span class="req">*</span></label><textarea id="motivo" required></textarea></div>
     <div class="full"><label for="especialidad">Especialidad quirúrgica solicitada <span class="req">*</span></label><input type="text" id="especialidad" required></div>
+    <div class="full alerta-cartera" id="alertaCartera" role="alert"></div>
     <div><label>Imágenes</label><div class="seg"><input type="radio" name="imagenes" id="img-no" value="No"><label for="img-no">No</label><input type="radio" name="imagenes" id="img-si" value="Sí"><label for="img-si">Sí</label></div></div>
     <div><label>Laboratorios</label><div class="seg"><input type="radio" name="laboratorios" id="lab-no" value="No"><label for="lab-no">No</label><input type="radio" name="laboratorios" id="lab-si" value="Sí"><label for="lab-si">Sí</label></div></div>
     <div><label>Técnicas quirúrgicas</label><div class="seg"><input type="radio" name="tecnicas" id="tec-no" value="No"><label for="tec-no">No</label><input type="radio" name="tecnicas" id="tec-si" value="Sí"><label for="tec-si">Sí</label></div></div>
@@ -433,7 +453,18 @@ async function buildPDF(d){
   const center=(t,font,size,color,yy)=>{ t=safe(t,font); page.drawText(t,{x:(PW-font.widthOfTextAtSize(t,size))/2,y:yy,size,font,color}); };
   center('HEQI: Regulación Médica de Traslados',B,15,AZ,y); y-=14;
   center('FORMULARIO DE DERIVACIÓN — USO EXCLUSIVO MÉDICO',B,8,TX,y); y-=10;
-  center('Generado: '+d.fecha_envio,F,7,TX,y); y-=22;
+  center('Generado: '+d.fecha_envio,F,7,TX,y); y-=14;
+  // Destacado: 1) especialidad, 2) paciente
+  { const esp=safe('ESPECIALIDAD SOLICITADA: '+String(d.especialidad||'—').toUpperCase(),B);
+    const pac=safe('PACIENTE: '+(d.nombre||'—')+(d.edad?' · '+d.edad+' años':'')+(d.ci?' · CI '+d.ci:''),B);
+    const espL=wrap(esp,B,13,TW-16), pacL=wrap(pac,B,10.5,TW-16);
+    const fc=fueraDeCartera(); const alL=fc.length?wrap(safe('ATENCIÓN: posible solicitud fuera de cartera ('+fc.join(', ')+'). Admisión responde NO CORRESPONDE.',B),B,9,TW-16):[];
+    const h=espL.length*16+pacL.length*13+alL.length*11+12;
+    page.drawRectangle({x:M,y:y-h,width:TW,height:h,color:rgb(.91,.94,.98),borderColor:AZ,borderWidth:1.2});
+    let ty=y-17; espL.forEach(l=>{ page.drawText(l,{x:M+8,y:ty,size:13,font:B,color:AZ}); ty-=16; });
+    pacL.forEach(l=>{ page.drawText(l,{x:M+8,y:ty+1,size:10.5,font:B,color:TX}); ty-=13; });
+    alL.forEach(l=>{ page.drawText(l,{x:M+8,y:ty+2,size:9,font:B,color:rgb(.7,.15,.12)}); ty-=11; });
+    y-=h+16; }
   const L=t=>({t,lab:true}), V=(t,span)=>({t:(t===''||t==null)?'—':t,span:span||1});
   const sec=(title,rows)=>{
     if(y<120)nuevaPag();
@@ -441,12 +472,12 @@ async function buildPDF(d){
     rows.forEach(r=>{
       let ci=0; const cells=r.map(c=>{ const w=CW.slice(ci,ci+(c.span||1)).reduce((a,b)=>a+b,0); const x=M+CW.slice(0,ci).reduce((a,b)=>a+b,0); ci+=(c.span||1);
         const font=c.lab?B:F, size=c.lab?7.2:8.5; const lines=wrap(safe(c.t,font),font,size,w-10); return {x,w,font,size,lines}; });
-      const h=Math.max(...cells.map(c=>c.lines.length*c.size*1.2))+6.5;
+      const h=Math.max(...cells.map(c=>c.lines.length*c.size*1.18))+5;
       if(y-h<50){ nuevaPag(); }
       cells.forEach(c=>{ page.drawRectangle({x:c.x,y:y-h,width:c.w,height:h,borderColor:LN,borderWidth:.8});
-        let ty=y-4-c.size*0.9; c.lines.forEach(l=>{ page.drawText(l,{x:c.x+5,y:ty,size:c.size,font:c.font,color:TX}); ty-=c.size*1.25; }); });
+        let ty=y-3.3-c.size*0.9; c.lines.forEach(l=>{ page.drawText(l,{x:c.x+5,y:ty,size:c.size,font:c.font,color:TX}); ty-=c.size*1.25; }); });
       y-=h;
-    }); y-=12;
+    }); y-=9;
   };
   const box=(text,col)=>{ const lines=wrap(safe(text,B),B,8.5,TW-14), h=lines.length*11+10; if(y-h<50)nuevaPag();
     page.drawRectangle({x:M,y:y-h,width:TW,height:h,borderColor:col,borderWidth:1.6});
@@ -492,21 +523,29 @@ async function buildPDF(d){
     [L('Teléfono'),V(d.telefono),L('Hora de presentación'),V(d.hora_presentacion)],
     [L('Institución de remisión'),V(d.institucion,3)]
   ]);
+  // Recuadro rojo: HEQI no cuenta con
+  { const R=rgb(.70,.15,.12);
+    const t1='HEQI NO CUENTA CON: ENDOSCOPIA DE URGENCIA NI AMBULATORIA (HDA, GASTROSTOMÍA) - DRENAJE PERCUTÁNEO - ANGIOGRAFÍA / HEMODINAMIA (DIAGNÓSTICA O TERAPÉUTICA) - CIRUGÍA MÍNIMAMENTE INVASIVA - CIRUGÍA VASCULAR COMPLEJA - CIRUGÍA PLÁSTICA Y QUEMADOS.';
+    const t2='Estas solicitudes son respondidas automáticamente por Admisión como NO CORRESPONDE (fuera de cartera de servicios).';
+    const l1=wrap(safe(t1,B),B,9,TW-16), l2=wrap(safe(t2,B),B,8,TW-16), h=l1.length*11.5+l2.length*10+14;
+    if(y-h<26) nuevaPag();
+    page.drawRectangle({x:M,y:y-h,width:TW,height:h,color:rgb(.99,.93,.92),borderColor:R,borderWidth:2});
+    let ty=y-14; l1.forEach(l=>{ page.drawText(l,{x:M+8,y:ty,size:9,font:B,color:R}); ty-=11.5; });
+    l2.forEach(l=>{ page.drawText(l,{x:M+8,y:ty,size:8,font:B,color:TX}); ty-=10; });
+    y-=h+8; }
   // Comunicados de HEQI
   { const items=[
       ['Uso estrictamente médico — prohibido el llenado por familiares.',true],
       ['Puede tardar unos minutos, ya que es recepcionado por médicos de guardia asistencial (pueden estar en consultas o procedimientos).',false],
-      ['No contamos con quirófano para cirugía vascular compleja, cirugía plástica y quemados, ni mínima invasiva.',false],
-      ['No contamos con endoscopia de urgencia.',true],
       ['El ingreso de pacientes es por la urgencia: Traumatología; Cirugía general y trauma; Urología; Apoyo clínico de resorte quirúrgico (tórax, neurocirugía, partes blandas para drenaje, sepsis de resorte quirúrgico, etc.).',false]];
     const lines=[]; items.forEach(([t,b])=>{ const f=b?B:F; wrap(safe('• '+t,f),f,7.5,TW-14).forEach(l=>lines.push([l,f])); });
     const h=lines.length*9.5+22;
-    if(y-h<40){ nuevaPag(); }
+    if(y-h<26){ nuevaPag(); }
     page.drawRectangle({x:M,y:y-h,width:TW,height:h,borderColor:LN,borderWidth:.8,color:rgb(.97,.98,1)});
     page.drawText(safe('COMUNICADOS HEQI',B),{x:M+7,y:y-12,size:8,font:B,color:AZ});
     let ty=y-24; lines.forEach(([l,f])=>{ page.drawText(l,{x:M+7,y:ty,size:7.5,font:f,color:TX}); ty-=9.5; });
-    y-=h+14; }
-  if(y<22)nuevaPag();
+    y-=h+12; }
+  if(y<16)nuevaPag();
   page.drawLine({start:{x:M,y:y+8},end:{x:PW-M,y:y+8},thickness:.6,color:LN});
   page.drawText(safe('Documento de derivación médica — HEQI. Uso exclusivo del personal médico. NEWS2 y SOFA calculados automáticamente.',F),{x:M,y:y-2,size:6.5,font:F,color:rgb(.3,.3,.3)});
   const bytes=await pdf.save();
@@ -517,7 +556,33 @@ function descargar(blob,name){
   a.href=url; a.download=name; a.rel='noopener'; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),60000);
 }
-function fileName(d){ return 'DERIVACION_HEQI_'+(d.nombre||'paciente').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'')+'_'+d._file+'.pdf'; }
+function fileName(d){
+  const limpio=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim();
+  const f=d._file||''; const fecha=f.length>=13 ? f.slice(6,8)+'-'+f.slice(4,6)+' '+f.slice(9,11)+'h'+f.slice(11,13) : '';
+  return (limpio(d.especialidad).toUpperCase()||'SIN ESPECIALIDAD')+' - '+(limpio(d.nombre)||'Paciente')+(fecha?' - '+fecha:'')+'.pdf'; }
+function textoCompartir(d){
+  const N=d._news||{};
+  return '🏥 '+String(d.especialidad||'Sin especialidad').toUpperCase()+' | '+(d.nombre||'')+(d.edad?', '+d.edad+' años':'')+
+    '\nNEWS2 '+(N.total!=null?N.total:'—')+(N.nivel==='alto'?' (riesgo ALTO)':'')+' | '+(d.institucion||'')+' | '+(d.medico||''); }
+
+/* ===== Detección de fuera de cartera ===== */
+const FUERA=[
+  [/endoscop|\bveda\b|colonoscop|gastroscop|\bcpre\b|rectosigmoidoscop|fibrobroncoscop|broncoscop|hemorragia digestiva|sangrado digestivo|\bhd[ab]\b|hematemesis|melena|varices esofagic|gastrostom|\bpeg\b/,'endoscopia de urgencia ni ambulatoria (incluye HDA y gastrostomía)'],
+  [/percutane|radiologia intervencionista|intervencionismo/,'drenaje percutáneo (radiología intervencionista)'],
+  [/angiograf|arteriograf|flebograf|hemodinamia|cateterismo|coronariograf|angioplast|emboliza|trombectomia mecanica|trombectomia endovascular|terapia endovascular/,'angiografía / hemodinamia (diagnóstica o terapéutica)'],
+  [/laparoscop|toracoscop|minima(mente)? invasiv|videolaparo|\bvats\b/,'cirugía mínimamente invasiva'],
+  [/cirugia vascular|vascular periferic|endovascular|aneurism|bypass|by-pass|isquemia arterial|diseccion aortica|diseccion de aorta|sindrome aortico|fistula arteriovenosa|\bfav\b/,'cirugía vascular compleja'],
+  [/quemad|cirugia plastica|\bplastica\b|colgajo|injerto de piel/,'cirugía plástica y quemados']];
+function fueraDeCartera(){
+  const t=['motivo','especialidad','dato'].map(id=>$(id).value).join(' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  return FUERA.filter(([re])=>re.test(t)).map(([,n])=>n);
+}
+function revisarCartera(){
+  const f=fueraDeCartera(), el=$('alertaCartera');
+  el.style.display=f.length?'block':'none';
+  el.textContent=f.length?'⛔ HEQI no cuenta con '+f.join(' ni ')+'. Admisión responderá automáticamente NO CORRESPONDE (fuera de cartera). Derivá a un centro que lo tenga.':'';
+}
+['motivo','especialidad','dato'].forEach(id=>$(id).addEventListener('input',revisarCartera));
 
 /* ===== Aviso de anexos ===== */
 const ANEXOS={imagenes:'imágenes',laboratorios:'laboratorio',tecnicas:'técnicas quirúrgicas'};
@@ -543,12 +608,12 @@ $('bDesc').addEventListener('click',async()=>{ try{ await asegurarPDF(); descarg
 $('bShare').addEventListener('click',async()=>{
   try{ await asegurarPDF(); }catch(e){ toast('Error al generar el PDF: '+(e.message||e)); return; }
   const file=new File([lastDoc],lastName,{type:'application/pdf'});
-  if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:'Derivación HEQI'}); }catch(e){} }
+  if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:lastName,text:textoCompartir(collect())}); }catch(e){} }
   else { descargar(lastDoc,lastName); toast('Adjuntá en WhatsApp el PDF descargado'); }
 });
 $('bLimpiar').addEventListener('click',()=>{
   if(!confirm('¿Borrar todos los datos del formulario?'))return;
-  $('f').reset(); toggleImg(); fio2Manual=false; estimarFio2(); $('labWrap').style.display='none'; $('vasoWrap').style.display='none'; avdiManual=false; lastDoc=null;
+  $('f').reset(); toggleImg(); revisarCartera(); fio2Manual=false; estimarFio2(); $('labWrap').style.display='none'; $('vasoWrap').style.display='none'; avdiManual=false; lastDoc=null;
   $('avdiHint').textContent='Se completa desde el Glasgow; podés corregirlo.';
   document.querySelectorAll('.invalid').forEach(e=>e.classList.remove('invalid'));
   $('done').classList.remove('show'); setHora(); calc(); window.scrollTo({top:0,behavior:'smooth'});
