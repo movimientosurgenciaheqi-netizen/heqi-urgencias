@@ -229,7 +229,7 @@ button:focus-visible{outline:3px solid rgba(36,71,154,.45);outline-offset:2px}
 <section>
   <h2>Solicitud de traslado</h2>
   <div class="grid">
-    <div class="full"><label for="motivo">Diagnóstico explícito principal de la derivación <span class="req">*</span></label><textarea id="motivo" required placeholder="Indique el diagnóstico clínico principal de forma específica. Ej.: litiasis ureteral obstructiva, fractura expuesta de tibia, apendicitis aguda complicada…"></textarea><div class="hint">Escriba el diagnóstico principal de manera clara y específica; evite motivos generales o síntomas aislados cuando exista un diagnóstico definido.</div></div>
+    <div class="full"><label for="motivo">Diagnóstico explícito principal de la derivación <span class="req">*</span></label><textarea id="motivo" required placeholder="Indique el diagnóstico clínico principal con palabras habituales y, si se conoce, su localización. Ej.: litiasis renal, ureteral o vesical; fractura de tibia; apendicitis aguda…"></textarea><div class="hint">El sistema reconoce palabras clave y términos clínicos relacionados. Puede escribir el diagnóstico habitual (p. ej., litiasis renal) sin tener que enumerar todas sus variantes; agregue localización o complicación si la conoce.</div></div>
     <div class="full note info" style="margin:0">
       <label style="color:var(--azul);font-size:.95rem">¿Lesión de piel y partes blandas con imagen que indique necesidad de drenaje o debridamiento? <span class="req">*</span></label>
       <div class="seg">
@@ -625,15 +625,25 @@ const cv=()=>radio('cardiopatia')==='Sí'||radio('valvulopatia')==='Sí';
 const n2=()=>{ const N=news2(); return N.total||0; };
 const REGLAS=[
   // Urología (antes que trauma general: trauma urogenital aislado)
-  [/doble j|cateter doble|pig ?tail/, ()=>[UR,'Dolor renoureteral en portador de catéter doble J']],
-  [/post ?operad\w* de urolog|postoperatorio de urolog|pop de urolog/, ()=>[UR,'Dolor de herida operatoria pos operado de Urología']],
+  [/doble ?j|cateter doble|pig ?tail|cateter ureteral|stent ureteral/, ()=>[UR,'Patología renoureteral / portador de catéter doble J o stent ureteral']],
+  [/post ?operad\w* de urolog|postoperatorio de urolog|pop de urolog/, ()=>[UR,'Posoperatorio de Urología']],
+  // Litiasis urinaria: solo cuando hay localización o término urológico explícito.
+  [/urolitiasis|nefrolitiasis|ureterolitiasis|cistolitiasis|litiasis (renal|renales|ureteral|ureterales|vesical|vesicales|urinaria|urinario|urinarias|urinarios)|calculo(s)? (renal|renales|ureteral|ureterales|vesical|vesicales|urinario|urinarios)|piedra(s)? (en el rinon|renal|ureter|vejiga)|colico nefritico|colico renal|colico ureteral|colico renoureteral|dolor renoureteral|calculo en (rinon|ureter|vejiga)|microlitiasis renal/, ()=>[UR,'Litiasis urinaria (renal, ureteral o vesical) / cólico renoureteral']],
+  [/hidronefrosis|hidronefrosis bilateral|ureterohidronefrosis|hidroureteronefrosis|hidroureter|dilatacion (pielocalicial|pielocaliceal|de la via urinaria)|ectasia pielica|pielocaliectasia|estenosis (pieloureteral|ureteral)|obstruccion (de la via urinaria|urinaria|ureteral|pieloureteral)|uropatia obstructiva|uropatia obstructiva bilateral|ectasia ureteral|megaureter/, ()=>[UR,'Uropatía obstructiva / hidronefrosis, hidroureter o dilatación pielocalicial']],
+  [/hiperplasia prostatica|hiperplasia benigna de prostata|hbp|adenoma prostatico|adenoma de prostata|prostatomegalia|prostatismo|patologia prostatica|enfermedad prostatica|prostata aumentada|prostatitis|prostatitis aguda|prostatitis cronica|prostatitis bacteriana|absceso prostatico|calcificacion prostatica|litiasis prostatica|dolor prostatico|retencion cronica de orina|sonda vesical|recambio de sonda|estenosis uretral|estenosis del meato|vejiga neurogena|vejiga hiperactiva|vejiga hipoactiva|vejiga de esfuerzo|incontinencia urinaria|incontinencia masculina|urgencia miccional|polaquiuria|disuria|patologia vesical|enfermedad vesical|lesion vesical|diverticulo vesical|esclerosis del cuello vesical|contractura del cuello vesical|fistula vesical|rotura vesical|ruptura vesical|cistitis intersticial|cistitis cronica/, ()=>[UR,'Patología prostática, vesical o de la vía urinaria baja']],
   [/priapismo/, ()=>[UR,'Priapismo']],
-  [/parafimosis|balanopostitis|balanitis/, ()=>[UR,'Parafimosis / balanopostitis']],
-  [/trauma\w* (urogenital|renal|vesical|uretral|testicular|genital|de pene|escrotal)/, ()=>[UR,'Trauma urogenital aislado']],
-  [/cuerpo extrano (ureteral|uretral|vesical)/, ()=>[UR,'Cuerpo extraño ureteral']],
+  [/parafimosis|fimosis|balanopostitis|balanitis|orquitis|epididimitis|hidrocele|varicocele/, ()=>[UR,'Patología genital / escrotal de Urología']],
+  [/trauma\w* (urogenital|renal|vesical|uretral|testicular|genital|de pene|escrotal)|lesion (renal|vesical|uretral|testicular|genital)/, ()=>[UR,'Trauma urogenital aislado']],
+  [/cuerpo extrano (ureteral|uretral|vesical)/, ()=>[UR,'Cuerpo extraño de la vía urinaria']],
   [/torsion (testicular|del cordon)|escroto agudo/, ()=>[UR,'Torsión testicular / escroto agudo']],
-  [/urosepsis|uro sepsis|pionefrosis|pio nefrosis|absceso (renal|perirrenal)/, ()=>[PV,'Urosepsis / pionefrosis obstructiva / absceso renal']],
+  [/tumor renal|tumoracion renal|masa renal|masa ocupante renal|lesion focal renal|quiste renal complejo|neoplasia renal|carcinoma renal|adenocarcinoma renal|cancer renal|tumor de pelvis renal|tumor pielico|tumor ureteral|tumor de ureter|neoplasia ureteral|carcinoma urotelial|tumor urotelial|tumor del urotelio|tumor del tracto urinario superior|tumor de vias urinarias|tumor de la via urinaria|tumor vesical|tumor de vejiga|neoplasia vesical|carcinoma vesical|tumor de uretra|carcinoma uretral|tumor testicular|neoplasia prostatica|adenocarcinoma prostatico|cancer prostatico|cancer de prostata|cancer de vejiga/, ()=>[UR,'Tumores del aparato urinario / patología tumoral urológica']],
+  [/urosepsis|uro sepsis|pionefrosis|pio nefrosis|absceso (renal|perirrenal)|pielonefritis enfisematosa|pielonefritis.*sepsis|infeccion urinaria.*sepsis/, ()=>[PV,'Urosepsis / infección urinaria complicada con sepsis o absceso']],
+  [/insuficiencia renal obstructiva|anuria obstructiva|obstruccion renoureteral|obstruccion de salida vesical|estenosis ureteropi[eé]lica|estenosis pieloureteral|malformacion de la via urinaria|fistula urinaria|urinoma|rotura vesical|lesion ureteral/, ()=>[UR,'Patología obstructiva o lesión de la vía urinaria']],
+  [/infeccion urinaria|infeccion de vias urinarias|infeccion urinaria recurrente|pielonefritis|pielitis|cistitis|prostatitis|orquiepididimitis|epididimitis|bacteriuria asociada a sonda/, ()=>[UR,'Infección de la vía urinaria (valorar gravedad y complicaciones)']],
   [/retencion (aguda )?(de )?orina|globo vesical|hematuria|coagulos/, ()=> n2()>=5 ? [PV,'Retención de orina / hematuria con descompensación (NEWS2 ≥ 5) o pluripatológico'] : [UR,'Retención de orina / hematuria sin descompensación (NEWS2 < 5)']],
+  // Polivalente: cirugía torácica (incluye empiema pleural) y especialidades no resolutivas de la cartera quirúrgica propia.
+  [/empiema (pleural|toracico)|piotorax|derrame pleural complicado|absceso pulmonar|hemotorax retenido|lesion esofagica toracica|mediastinitis|mediastino|trauma\w* (toracico|de torax)/, ()=>[PV,'Patología torácica / empiema pleural o trauma torácico — Polivalente']],
+  [/neumotorax|hemotorax/, ()=>[PV,'Patología pleural (neumotórax/hemotórax) — Polivalente']],
   // Polivalente: cuello, neuro, infecciones, tórax
   [/fascitis necrotizante (de|en) (la )?pared abdominal/, ()=>[CG,'Fascitis necrotizante de pared abdominal']],
   [/fournier/, ()=>[CG,'Gangrena de Fournier (interconsulta con Urología si el foco es genital)']],
@@ -649,20 +659,19 @@ const REGLAS=[
   [/piomiositis|absceso muscular/, ()=>[PV,'Piomiositis con absceso muscular']],
   [/osteomielitis/, ()=>[PV,'Osteomielitis aguda con absceso subperióstico']],
   [/celulitis|flemon|absceso (de partes blandas|glute\w*|subcutane\w*|cutane\w*|de piel)/, ()=>[PV,'Celulitis abscedada / flemón profundo']],
-  [/neumonia complicada|empiema|derrame pleural/, ()=>[PV,'Neumonía complicada con derrame / empiema']],
+  [/neumonia complicada|derrame pleural/, ()=>[PV,'Neumonía complicada con derrame pleural']],
   [/lesion(es)? por presion|ulcera(s)? por presion|escara/, ()=>[PV,'Lesión por presión con criterio de desbridamiento']],
   // Cirugía General y Trauma
-  [/politrauma|poli trauma|accidente de transito|siniestro vial|arma blanca|arma de fuego|herida (penetrante|por arma)|trauma\w* (abdominal|de abdomen|toracico|de torax)/, ()=>[CG,'Paciente politraumatizado / trauma de tronco']],
+  [/politrauma|poli trauma|accidente de transito|siniestro vial|arma blanca|arma de fuego|herida (penetrante|por arma)|trauma\w* (abdominal|de abdomen)/, ()=>[CG,'Paciente politraumatizado / trauma abdominal']],
   [/melena|hematemesis|hemorragia digestiva|sangrado digestivo|\bhd[ab]\b|rectorragia|hematoquecia/, ()=> (cv()||n2()>=5) ? [NC,'Hemorragia digestiva inestable o con condicional cardiovascular: requiere endoscopia de urgencia (HEQI no cuenta)'] : [CG,'Hemorragia digestiva clínicamente estable: evaluación para programación endoscópica']],
-  [/oclusion intestinal|obstruccion intestinal|suboclusion|bridas|hernia (estrangulada|atascada|incarcerada|complicada)|volvulo/, ()=>[CG,'Síndrome de oclusión intestinal'+(cv()?' - ATENCIÓN: con condicional cardiovascular (revisar criterio)':'')]],
-  [/ictericia|coledocolitiasis|colestasis/, ()=>[CG,'Ictericia obstructiva sin colangitis'+(cv()?' - ATENCIÓN: con condicional cardiovascular (revisar criterio)':'')]],
+  [/oclusion intestinal|obstruccion intestinal|suboclusion|bridas|hernia (estrangulada|atascada|incarcerada|complicada|inguinal|umbilical|incisional)|volvulo/, ()=>[CG,'Patología abdominal quirúrgica / oclusión intestinal o hernia'+(cv()?' - ATENCIÓN: con condicional cardiovascular (revisar criterio)':'')]],
+  [/litiasis vesicular|colelitiasis|calculos? (en la )?vesicula|calculo vesicular|litiasis biliar|coledocolitiasis|coledocolitiasis|colecistolitiasis|colecistitis|colangitis|ictericia obstructiva|colestasis/, ()=>[CG,'Patología biliar / litiasis vesicular, colecistitis o coledocolitiasis'+(cv()?' - ATENCIÓN: con condicional cardiovascular (revisar criterio)':'')]],
   [/pancreatitis/, ()=>[CG,'Pancreatitis aguda litiásica o complicada']],
   [/embarazo ectopico|ectopico|\beip\b|enfermedad inflamatoria pelvica/, ()=>[CG,'EIP / sospecha de embarazo ectópico']],
   [/infeccion (de|del) sitio quirurgico|\bisq\b|infeccion de (la )?herida (operatoria|quirurgica)|dehiscencia|evisceracion|abdomen abierto|laparostomia|bolsa de bogota/, ()=>[CG,'Complicación de herida / ISQ / abdomen abierto (en seguimiento por HEQI)']],
-  [/neumotorax|hemotorax/, ()=>[CG,'Neumotórax con criterios de drenaje']],
   [/abdomen agudo|apendicitis|apendicular|colecistitis|diverticulitis|peritonitis|perforacion|viscera hueca|dolor abdominal|plastron/, ()=>[CG,'Dolor abdominal agudo quirúrgico']],
   // Traumatología
-  [/fractura|luxacion|sindrome compartimental|protesis|tendon|tendin|ligament|herida (compleja|de mano|de miembro|cortante)|lumbalgia|lumbociatalgia|cervicalgia|dorsalgia|dolor de columna|vertebro ?medular|raquimedular|lesion medular|compresion medular|cola de caballo|hernia de disco|esguince/, ()=>[TR,'Trauma de miembros / columna']],
+  [/fractura|fractura patologica|fractura por fragilidad|luxacion|sindrome compartimental|protesis|tendon|tendin|ligament|menisco|rotura de ligamento|lesion de rodilla|lesion osteocondral|condropatia|artrosis|osteoartrosis|artritis degenerativa|osteonecrosis|necrosis avascular|osteocondritis|osteocondroma|encondroma|quiste oseo|tumor oseo|lesion osea|lesion litica osea|lesion blastica osea|displasia fibrosa|enfermedad de paget|deformidad osea|pseudoartrosis|retardo de consolidacion|consolidacion viciosa|no consolidacion|herida (compleja|de mano|de miembro|cortante)|lumbalgia|lumbociatalgia|cervicalgia|dorsalgia|dolor de columna|vertebro ?medular|raquimedular|lesion medular|compresion medular|cola de caballo|hernia de disco|esguince|osteosintesis|material de osteosintesis/, ()=>[TR,'Patología traumatológica, ósea u osteoarticular (excluye osteoporosis aislada)']],
 ];
 let espManual=false;
 function textoDx(){ return ($('motivo').value+' || '+$('dato').value).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
@@ -735,6 +744,7 @@ document.querySelectorAll('input[name=cardiopatia],input[name=valvulopatia]').fo
 
 /* ===== Detección de fuera de cartera ===== */
 const FUERA=[
+  [/colangitis|colangitis aguda|colangitis obstructiva/,'CPRE / drenaje biliar endoscópico de urgencia (no disponible en HEQI)'],
   [/endoscop|\bveda\b|colonoscop|gastroscop|\bcpre\b|rectosigmoidoscop|fibrobroncoscop|broncoscop|varices esofagic|gastrostom|\bpeg\b/,'endoscopia de urgencia ni ambulatoria (incluye gastrostomía)'],
   [/percutane|radiologia intervencionista|intervencionismo/,'drenaje percutáneo (radiología intervencionista)'],
   [/angiograf|arteriograf|flebograf|hemodinamia|cateterismo|coronariograf|angioplast|emboliza|trombectomia mecanica|trombectomia endovascular|terapia endovascular/,'angiografía / hemodinamia (diagnóstica o terapéutica)'],
