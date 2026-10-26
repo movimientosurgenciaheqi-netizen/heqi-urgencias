@@ -256,7 +256,7 @@ button:focus-visible{outline:3px solid rgba(36,71,154,.45);outline-offset:2px}
       <div id="anexoLesionWrap" style="display:none;margin-top:8px">
         <label class="check"><input type="checkbox" id="anexoLesion" /> 📎 Confirmo que se anexa la imagen (ecografía/TAC) e informe por WhatsApp. <span class="req">*</span></label>
       </div>
-      <label class="opt"><input type="radio" name="situacion" value="posop"><span><b>Posoperatorio inmediato o temprano (≤ 7 días) o complicaciones relacionadas a la cirugía</b><small>Ej.: infección del sitio quirúrgico, dehiscencia de herida, colección o absceso posoperatorio, sangrado posquirúrgico, fiebre posoperatoria. → Especialidad que realizó la cirugía.</small></span></label>
+      <label class="opt"><input type="radio" name="situacion" value="posop"><span><b>Posoperatorio inmediato o temprano (≤ 15 días) o complicaciones relacionadas a la cirugía</b><small>Ej.: infección del sitio quirúrgico, dehiscencia de herida, colección o absceso posoperatorio, sangrado posquirúrgico, fiebre posoperatoria. → Especialidad que realizó la cirugía.</small></span></label>
       <div class="grid" id="posopWrap" style="display:none;margin-top:10px">
         <div><label for="fechaCirugia">Fecha de la cirugía <span class="req">*</span></label><input type="date" id="fechaCirugia" /></div>
         <div><label for="especialidadQx">Especialidad tratante <span class="req">*</span></label>
@@ -754,7 +754,7 @@ function carteraBase(){
   if(radio('posoperatorio')==='Sí'){
     const dias=calcularDiasPosop(), esp=$('especialidadQx').value, complicacion=radio('complicacionQx')==='Sí';
     const servicio=({ 'Urología':UR, 'Traumatología':TR, 'Cirugía General y Trauma':CG })[esp];
-    if(complicacion || (dias!==null && dias<=7)){ const destino=servicio||PV; return {servicio:destino, criterio:(complicacion?'Complicación confirmada relacionada con cirugía previa':'Posoperatorio inmediato/temprano (hasta 7 días)')+' — '+esp+'; '+(dias===null?'antigüedad no calculada':dias+' día(s) desde la cirugía')+(servicio?'':' — derivación a Polivalente por cirugía de otra especialidad')}; }
+    if(complicacion || (dias!==null && dias<=15)){ const destino=servicio||PV; return {servicio:destino, criterio:(complicacion?'Complicación confirmada relacionada con cirugía previa':'Posoperatorio inmediato/temprano (hasta 15 días)')+' — '+esp+'; '+(dias===null?'antigüedad no calculada':dias+' día(s) desde la cirugía')+(servicio?'':' — derivación a Polivalente por cirugía de otra especialidad')}; }
   }
   const partes=[$('motivo').value,$('dato').value].map(dxNorm);
   for(const t of partes){ if(!t.trim())continue; for(const [re,fn] of REGLAS){ if(re.test(t)){ const r=fn(); if(!r) continue; const [servicio,criterio]=r; const m=t.match(re); return {servicio,criterio,detectado:m?m[0]:'',deTexto:true}; } } }
@@ -770,8 +770,8 @@ function clasificacionPosop(){
   const d=calcularDiasPosop(); if(d===null) return '';
   if(d===0) return 'Día de la cirugía';
   if(d<=1) return 'Posoperatorio inmediato (día 0–1; fecha sin hora exacta)';
-  if(d<=7) return 'Posoperatorio temprano (días 2–7)';
-  return 'Posoperatorio posterior a los primeros 7 días';
+  if(d<=15) return 'Posoperatorio temprano (días 2-15)';
+  return 'Posoperatorio posterior a los primeros 15 días';
 }
 function actualizarPosop(){
   const si=radio('posoperatorio')==='Sí', wrap=$('posopWrap'); wrap.style.display=si?'':'none';
@@ -780,7 +780,7 @@ function actualizarPosop(){
   if(!si){ $('fechaCirugia').value=''; $('especialidadQx').value=''; $('procedimientoQx').value=''; document.querySelectorAll('input[name=opHeqi]').forEach(el=>el.checked=false); document.querySelectorAll('input[name=complicacionQx]').forEach(el=>el.checked=false); }
   const d=calcularDiasPosop(), out=$('clasifPosop');
   out.style.display=si&&d!==null?'block':'none';
-  out.className='full hint '+(d!==null&&d>7?'mal':'ok');
+  out.className='full hint '+(d!==null&&d>15?'mal':'ok');
   out.textContent=si&&d!==null?('Antigüedad: '+d+' día(s). Clasificación orientativa: '+clasificacionPosop()+'. La clasificación temporal no excluye por sí sola una complicación tardía.') : '';
   aplicarCartera();
 }
