@@ -393,9 +393,9 @@ function news2(){
   if(t==null)miss.push('T°'); else p.Temp = t<=35?3: t<=36?1: t<=38?0: t<=39?1:2;
   const total = Object.values(p).reduce((a,b)=>a+b,0), any3 = Object.values(p).some(x=>x===3);
   let nivel='bajo', texto='RIESGO BAJO';
-  if(total>=7){nivel='alto';texto='RIESGO ALTO — evaluación urgente / considerar respuesta clínica inmediata';}
-  else if(total>=5){nivel='medio';texto='RIESGO MEDIO — revisión urgente por médico';}
-  else if(any3){nivel='medio';texto='RIESGO BAJO-MEDIO — un parámetro en 3, revisión urgente';}
+  if(total>=7){nivel='alto';texto='RIESGO ALTO - requiere evaluación multidisciplinaria integral';}
+  else if(any3){nivel='alto';texto='3 EN UN SOLO PARÁMETRO - requiere evaluación multidisciplinaria integral';}
+  else if(total>=5){nivel='medio';texto='RIESGO MEDIO';}
   return {total,p,miss,nivel,texto};
 }
 
@@ -738,7 +738,7 @@ function cartera(){
   if(c.servicio===UR && pluri() && inestable())
     return Object.assign({},c,{servicio:PV, criterio:c.criterio+' - paciente pluripatológico inestable (NEWS2 ≥ 5 o parámetro con puntaje 3)'});
   if([TR,CG].includes(c.servicio) && pluri() && altoRiesgo())
-    return Object.assign({},c,{alerta:'REQUIERE EVALUACIÓN INTEGRAL: paciente pluripatológico de alto riesgo (NEWS2 ≥ 7 o parámetro con puntaje 3)'});
+    return Object.assign({},c,{alerta:'REQUIERE EVALUACIÓN MULTIDISCIPLINARIA INTEGRAL: paciente pluripatológico con NEWS2 ≥ 7 o 3 en un solo parámetro'});
   return c;
 }
 function carteraBase(){
