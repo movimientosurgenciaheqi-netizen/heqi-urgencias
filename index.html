@@ -128,7 +128,7 @@ button:focus-visible{outline:3px solid rgba(36,71,154,.45);outline-offset:2px}
 
 <div class="note info">Puede tardar unos minutos, ya que es recepcionado por médicos de guardia asistencial (pueden estar en consultas o procedimientos).</div>
 <div class="nocontamos" role="alert">
-  <h3>⛔ HEQI NO CUENTA CON:</h3>
+  <h3>⛔ SERVICIOS NO DISPONIBLES EN INGAVI</h3>
   <ul>
     <li>Endoscopia / CPRE de urgencia</li>
     <li>Angiografía / hemodinamia</li>
@@ -138,7 +138,7 @@ button:focus-visible{outline:3px solid rgba(36,71,154,.45);outline-offset:2px}
     <li>Cirugía vascular compleja</li>
     <li>Cirugía plástica y quemados</li>
   </ul>
-  <div class="auto">Estas solicitudes no corresponden a la cartera de servicios de HEQI. Admisión le recomendará el centro de la red que corresponde, para redireccionar la presentación del caso.</div>
+  <div class="auto">Estas solicitudes no pueden resolverse en Ingavi porque no contamos con el servicio. Favor presentar el caso a un centro de la red IPS que cuente con el servicio.</div>
 </div>
 <div class="note list">
   <h3>El ingreso de pacientes es por la urgencia</h3>
@@ -528,7 +528,7 @@ async function buildPDF(d){
   { const e0=String(d.especialidad||''); const nc=[ETQ_NC,ETQ_PED,ETQ_NOREC,ETQ_CONF].includes(e0)||e0.indexOf('NO CORRESPONDE')===0;
     const espTxt=(nc?'RESULTADO: ':'ESPECIALIDAD: ')+String(d.especialidad||'—').toUpperCase()+(d.rea==='Sí'&&!nc?' + REANIMACIÓN (REA)':'');
     const espL=wrap(safe(espTxt,B),B,13,TW-16);
-    const criTxt=nc ? (e0===ETQ_PED?'Esta solicitud es pediátrica (menor de 18 años) y no puede resolverse en Ingavi. Admisión la derivará a la red correspondiente.':e0===ETQ_NOREC?'No se identificó el diagnóstico en la cartera de Ingavi. Ver la observación del médico que deriva.':e0===ETQ_CONF?'Urología solo recibe con diagnóstico confirmado (imagen o laboratorio).':'Esta solicitud no puede resolverse en Ingavi porque no cuenta con el servicio ('+String(d.criterio_cartera||'').replace(/^HEQI no cuenta con /,'')+'). Admisión la derivará a la red correspondiente.') : (d.criterio_cartera?'Cartera de Servicios: '+d.criterio_cartera:'');
+    const criTxt=nc ? (e0===ETQ_PED?'Esta solicitud es pediátrica (menor de 18 años) y no puede resolverse en Ingavi. Favor presentar el caso a un centro de la red IPS con atención pediátrica.':e0===ETQ_NOREC?'No se identificó el diagnóstico en la cartera de Ingavi. Ver la observación del médico que deriva.':e0===ETQ_CONF?'Urología solo recibe con diagnóstico confirmado (imagen o laboratorio).':'Esta solicitud no puede resolverse en Ingavi porque no cuenta con el servicio ('+String(d.criterio_cartera||'').replace(/^HEQI no cuenta con /,'')+'). Favor presentar el caso a un centro de la red IPS que cuente con el servicio.') : (d.criterio_cartera?'Cartera de Servicios: '+d.criterio_cartera:'');
     const criL=criTxt?wrap(safe(criTxt,F),F,8.5,TW-16):[];
     const pacL=wrap(safe('PACIENTE: '+(d.nombre||'—')+(d.edad?' · '+d.edad+' años':'')+(d.ci?' · CI '+d.ci:''),B),B,10.5,TW-16);
     const refL=wrap(safe('REFERENCIA: '+(d.institucion||'—')+(d.medico?' · '+d.medico:'')+(d.telefono?' · Tel. '+d.telefono:''),B),B,10,TW-16);
@@ -607,8 +607,8 @@ async function buildPDF(d){
   ]);
   // Recuadro rojo: HEQI no cuenta con
   { const R=rgb(.70,.15,.12);
-    const t1='HEQI NO CUENTA CON: ENDOSCOPIA / CPRE DE URGENCIA - ANGIOGRAFÍA / HEMODINAMIA - RADIOLOGÍA INTERVENCIONISTA / MÍNIMA INVASIÓN: DRENAJES PERCUTÁNEOS O CATÉTER MULTIPROPÓSITO - CIRUGÍA TRANSESFENOIDAL - UNIDAD CORONARIA NI CARDIOCIRUGÍA - CIRUGÍA VASCULAR COMPLEJA - CIRUGÍA PLÁSTICA Y QUEMADOS.';
-    const t2='Estas solicitudes no corresponden a la cartera de servicios de HEQI. Admisión le recomendará el centro de la red que corresponde, para redireccionar la presentación del caso.';
+    const t1='SERVICIOS NO DISPONIBLES EN INGAVI: ENDOSCOPIA / CPRE DE URGENCIA - ANGIOGRAFÍA / HEMODINAMIA - RADIOLOGÍA INTERVENCIONISTA / MÍNIMA INVASIÓN: DRENAJES PERCUTÁNEOS O CATÉTER MULTIPROPÓSITO - CIRUGÍA TRANSESFENOIDAL - UNIDAD CORONARIA NI CARDIOCIRUGÍA - CIRUGÍA VASCULAR COMPLEJA - CIRUGÍA PLÁSTICA Y QUEMADOS.';
+    const t2='Estas solicitudes no pueden resolverse en Ingavi porque no contamos con el servicio. Favor presentar el caso a un centro de la red IPS que cuente con el servicio.';
     const l1=wrap(safe(t1,B),B,9,TW-16), l2=wrap(safe(t2,B),B,8,TW-16), h=l1.length*11.5+l2.length*10+14;
     if(y-h<26) nuevaPag();
     page.drawRectangle({x:M,y:y-h,width:TW,height:h,color:rgb(.99,.93,.92),borderColor:R,borderWidth:2});
@@ -954,10 +954,10 @@ function aplicarCartera(){
     const det=c.detectado?' (detectado: «'+c.detectado+'»)':'';
     h.className='hint '+(c.servicio===NC?'mal':'ok');
     h.textContent=c.servicio===NC
-      ? (ped ? '⛔ Esta solicitud es pediátrica (menor de 18 años) y no puede resolverse en Ingavi. Admisión la derivará a la red correspondiente. Solo se reciben, estables, el trauma aislado de miembros y el TEC o trauma maxilofacial aislado.'
+      ? (ped ? '⛔ Esta solicitud es pediátrica (menor de 18 años) y no puede resolverse en Ingavi. Favor presentar el caso a un centro de la red IPS con atención pediátrica. Solo se reciben, estables, el trauma aislado de miembros y el TEC o trauma maxilofacial aislado.'
         : conf ? '⛔ Urología solo recibe con diagnóstico confirmado (imagen o laboratorio). Confirme el diagnóstico antes de derivar; si igual desea solicitar la derivación, fundamente el motivo en Observación.'
         : noRec ? '⛔ No se pudo identificar el diagnóstico en la cartera de Ingavi. Revise la redacción o elíjalo de la lista; si igual desea solicitar la derivación, fundamente el motivo en Observación.'
-        : '⛔ Esta solicitud no puede resolverse en Ingavi porque no cuenta con el servicio ('+c.criterio.replace(/^HEQI no cuenta con /,'')+')'+det+'. Admisión la derivará a la red correspondiente. Si igual desea solicitar la derivación, fundamente el motivo en Observación.')
+        : '⛔ Esta solicitud no puede resolverse en Ingavi porque no cuenta con el servicio ('+c.criterio.replace(/^HEQI no cuenta con /,'')+')'+det+'. Favor presentar el caso a un centro de la red IPS que cuente con el servicio. Si igual desea solicitar la derivación, fundamente el motivo en Observación.')
       : '✅ Corresponde a '+c.servicio.toUpperCase()+'. Criterio: '+c.criterio+det+'.'+(c.alerta?' ⚠️ '+c.alerta+'.':'')+nota;
     if(CORRECCIONES.length) h.textContent+=' ✏️ Se interpretó: '+CORRECCIONES.slice(0,3).map(([a,b])=>'«'+a+'» como «'+b+'»').join(', ')+'.';
     if(c.alerta && c.servicio!==NC) h.className='hint mal';
@@ -1015,7 +1015,7 @@ function fueraDeCartera(){
 function revisarCartera(){
   const f=fueraDeCartera(), el=$('alertaCartera');
   el.style.display=f.length?'block':'none';
-  el.textContent=f.length?'⛔ Ingavi no cuenta con '+f.join(' ni ')+'. Esta solicitud no puede resolverse en Ingavi; Admisión la derivará a la red correspondiente.':'';
+  el.textContent=f.length?'⛔ Ingavi no cuenta con '+f.join(' ni ')+'. Esta solicitud no puede resolverse en Ingavi. Favor presentar el caso a un centro de la red IPS que cuente con el servicio.':'';
 }
 ['motivo','dato'].forEach(id=>$(id).addEventListener('input',revisarCartera));
 
