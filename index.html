@@ -33,7 +33,7 @@ header .sub{color:var(--gris);margin:0 0 14px;font-size:1.02rem}
 .nocontamos li:first-child{border-top:none}
 .nocontamos li::before{content:"✕";position:absolute;left:4px;font-weight:900}
 .nocontamos .auto{margin-top:10px;background:#fff;color:#b3261e;border-radius:10px;padding:9px 11px;font-weight:900;font-size:.95rem}
-.hint.ok{color:#2f7d4f;font-weight:700}.hint.mal{color:#b3261e;font-weight:700}
+.hint.ok{color:#2f7d4f;font-weight:700}.hint.vi{color:#b35c00;font-weight:700}.hint.mal{color:#b3261e;font-weight:700}
 .alerta-cartera{display:none;background:#fdecea;border:2px solid #b3261e;color:#8c1d16;border-radius:12px;padding:10px 12px;font-weight:800;font-size:.95rem}
 .note.list{border:1px solid var(--linea)}
 .note.list h3{color:var(--azul);margin:0 0 6px;font-size:1.05rem;font-weight:900;text-transform:uppercase}
@@ -61,6 +61,13 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--azul);bo
 .seg input:focus-visible+label{box-shadow:inset 0 0 0 3px rgba(36,71,154,.4)}
 .gcs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .hint{font-size:.8rem;color:var(--gris);margin-top:4px}
+.acwrap{position:relative}
+.sug{position:absolute;left:0;right:0;top:100%;z-index:40;list-style:none;margin:4px 0 0;padding:4px;background:#fff;border:1.5px solid var(--azul);border-radius:10px;max-height:330px;overflow:auto;box-shadow:0 8px 24px rgba(20,40,80,.18)}
+.sug li{padding:9px 10px;border-radius:7px;cursor:pointer;line-height:1.3}
+.sug li[aria-selected="true"],.sug li:hover{background:#e8eef8}
+.sug li b{display:block;font-size:.95rem;color:#1b2330}
+.sug li small{color:#5b6b82;font-size:.76rem}
+.sug li.otro{border-top:1px solid #d5dde8;color:#2c4a8a;font-weight:700;margin-top:2px}
 .opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1.5px solid var(--linea);border-radius:10px;background:#fff;margin:8px 0 0;font-weight:500;color:var(--tinta);font-size:.93rem;cursor:pointer}
 .opt input{width:20px;height:20px;margin-top:2px;flex:0 0 auto;accent-color:var(--azul)}
 .opt small{display:block;color:var(--gris);font-size:.8rem;font-weight:400;margin-top:3px}
@@ -123,15 +130,15 @@ button:focus-visible{outline:3px solid rgba(36,71,154,.45);outline-offset:2px}
 <div class="nocontamos" role="alert">
   <h3>⛔ HEQI NO CUENTA CON:</h3>
   <ul>
-    <li>Endoscopia de urgencia ni ambulatoria (hemorragia digestiva alta, gastrostomía, CPRE de urgencia)</li>
-    <li>Angiografía / hemodinamia (diagnóstica o terapéutica)</li>
-    <li>Radiología intervencionista / cirugía mínimamente invasiva: drenajes percutáneos guiados o con catéter multipropósito</li>
-    <li>Neurocirugía: cirugía transesfenoidal (no hay otorrinolaringología) ni biopsia estereotáxica</li>
-    <li>Cirugía vascular compleja (aneurisma de aorta, AOC, amputación por pie diabético)</li>
+    <li>Endoscopia / CPRE de urgencia</li>
+    <li>Angiografía / hemodinamia</li>
+    <li>Radiología intervencionista / mínima invasión: drenajes percutáneos o catéter multipropósito</li>
+    <li>Cirugía transesfenoidal</li>
+    <li>Unidad coronaria ni cardiocirugía</li>
+    <li>Cirugía vascular compleja</li>
     <li>Cirugía plástica y quemados</li>
-    <li>Oftalmología (trauma ocular) y pediatría (menores de 18 años)</li>
   </ul>
-  <div class="auto">Estas solicitudes son respondidas automáticamente por Admisión como NO CORRESPONDE (fuera de cartera de servicios).</div>
+  <div class="auto">Estas solicitudes no corresponden a la cartera de servicios de HEQI. Admisión le recomendará el centro de la red que corresponde, para redireccionar la presentación del caso.</div>
 </div>
 <div class="note list">
   <h3>El ingreso de pacientes es por la urgencia</h3>
@@ -162,7 +169,8 @@ button:focus-visible{outline:3px solid rgba(36,71,154,.45);outline-offset:2px}
         <label class="check"><input type="checkbox" name="comorb" value="Cirrosis / hepatopatía crónica"> Cirrosis / hepatopatía crónica</label>
         <label class="check"><input type="checkbox" name="comorb" value="Oncológico"> Oncológico</label>
         <label class="check"><input type="checkbox" name="comorb" value="Inmunosupresión"> Inmunosupresión</label>
-        <div class="subt">Condicional cardiovascular</div>
+        <div class="subt" id="cvLabel">Condicional cardiovascular <span class="req">*</span></div>
+        <label class="check" style="font-weight:700"><input type="checkbox" id="comorbCVNinguna"> Ninguna</label>
         <label class="check"><input type="checkbox" name="comorbCV" value="Post operado cardiovascular"> Post operado cardiovascular</label>
         <label class="check"><input type="checkbox" name="comorbCV" value="Cardiopatía isquémica / stents"> Cardiopatía isquémica / stents</label>
         <label class="check"><input type="checkbox" name="comorbCV" value="Valvulopatía severa"> Valvulopatía severa</label>
@@ -248,7 +256,7 @@ button:focus-visible{outline:3px solid rgba(36,71,154,.45);outline-offset:2px}
 <section>
   <h2>Solicitud de traslado</h2>
   <div class="grid">
-    <div class="full"><label for="motivo">Diagnóstico explícito principal de la derivación <span class="req">*</span></label><textarea id="motivo" required placeholder="Indique el diagnóstico clínico principal con palabras habituales y, si se conoce, su localización. Ej.: litiasis renal, ureteral o vesical; fractura de tibia; apendicitis aguda…"></textarea><div class="hint">El sistema reconoce palabras clave y términos clínicos relacionados. Puede escribir el diagnóstico habitual (p. ej., litiasis renal) sin tener que enumerar todas sus variantes; agregue localización o complicación si la conoce.</div></div>
+    <div class="full"><label for="motivo">Diagnóstico explícito principal de la derivación <span class="req">*</span></label><div class="acwrap"><textarea id="motivo" required autocomplete="off" aria-autocomplete="list" aria-controls="sugerencias" placeholder="Indique el diagnóstico clínico principal con palabras habituales y, si se conoce, su localización. Ej.: litiasis renal, ureteral o vesical; fractura de tibia; apendicitis aguda…"></textarea><ul id="sugerencias" class="sug" role="listbox" hidden></ul></div><input type="hidden" id="cie10" value=""><div class="hint ok" id="cieInfo"></div><div class="hint">Escriba 2 letras y elija de la lista, o escriba libremente. El sistema reconoce palabras clave y términos clínicos relacionados. Puede escribir el diagnóstico habitual (p. ej., litiasis renal) sin tener que enumerar todas sus variantes; agregue localización o complicación si la conoce.</div></div>
     <div class="full note info" style="margin:0" id="situacionBox">
       <label style="color:var(--azul);font-size:.95rem">¿El paciente presenta alguna de las siguientes condiciones? <span class="req">*</span></label>
       <label class="opt"><input type="radio" name="situacion" value="ninguna"><span><b>Ninguna</b></span></label>
@@ -279,7 +287,7 @@ button:focus-visible{outline:3px solid rgba(36,71,154,.45);outline-offset:2px}
       <div class="hint" id="carteraHint">La especialidad se determinará automáticamente a partir del diagnóstico. Este campo no se puede modificar manualmente.</div></div>
     <div class="full" id="obsCarteraWrap" style="display:none">
       <label for="obsCartera">Observación: solicito derivar a Ingavi por la siguiente razón <span class="req">*</span></label>
-      <textarea id="obsCartera" placeholder="Fundamente por qué solicita la derivación a Ingavi, aunque el caso no corresponda a su Cartera de Servicios."></textarea>
+      <textarea id="obsCartera" placeholder="Fundamente por qué solicita la derivación a Ingavi (caso que no corresponde o que requiere valoración individual)."></textarea>
       <div class="hint mal">Importante: esta justificación no garantiza la aceptación de la derivación. La respuesta estará condicionada a la evaluación del caso y a la capacidad resolutiva disponible en HEQI.</div>
     </div>
     <div class="full"><label>¿Solicita Reanimación (REA) por gravedad?</label>
@@ -464,7 +472,7 @@ function collect(){
     id: Date.now().toString(36)+Math.random().toString(36).slice(2,7),
     fecha_envio: t.txt, _file: t.file,
     nombre:v('nombre'), edad:v('edad'), ci:v('ci'), patologias: ($('comorbNinguna').checked?['Ninguna']:[...document.querySelectorAll('input[name=comorb]:checked,input[name=comorbCV]:checked')].map(x=>x.value==='Enfermedad renal crónica'?x.value+(radio('dialisis')==='Sí'?' (en diálisis)':radio('dialisis')==='No'?' (sin diálisis)':''):x.value)).concat(v('patologias')?[v('patologias')]:[]).join(', '), antecedentes_qx:v('antecedentes'),
-    condicional_cv: [...document.querySelectorAll('input[name=comorbCV]:checked')].map(x=>x.value).join(', ')||'No', nota_cv: cv()?'Requiere seguimiento cardiológico cercano':'', alerta: ((typeof cartera==='function' && cartera())||{}).alerta||'', operado_heqi: radio('opHeqi'), dias_internacion:v('dias'),
+    condicional_cv: [...document.querySelectorAll('input[name=comorbCV]:checked')].map(x=>x.value).join(', ')||'Ninguna', nota_cv: cv()?'Requiere seguimiento cardiológico cercano':'', alerta: ((typeof cartera==='function' && cartera())||{}).alerta||'', operado_heqi: radio('opHeqi'), dias_internacion:v('dias'),
     dato_clinico:v('dato'), fc:v('fc'), fr:v('fr'), tas:v('tas'), tad:v('tad'), pam: S.pam!=null?Math.round(S.pam):'',
     spo2:v('spo2'), spo2_escala: $('esc2').checked?'Escala 2 (EPOC)':'Escala 1', temperatura:v('temp'),
     oxigeno: $('disp').value==='AA'?'Aire ambiente':'Suplementario', dispositivo_o2: DISP[$('disp').value]+($('disp').value==='CN'&&v('flujo')?' '+v('flujo')+' L/min':''), fio2:v('fio2'), safi: (S.c.Resp?S.c.Resp.t.replace('SaFi ',''):''),
@@ -475,7 +483,7 @@ function collect(){
     creatinina: radio('tieneLab')==='Sí'?v('creat'):'', diuresis: radio('tieneLab')==='Sí'?v('diuresis'):'',
     news2:N.total, news2_riesgo:N.texto, news2_incompleto:N.miss.join(', '),
     sofa: S.n?S.total:'', sofa_componentes: S.n+'/6', sofa_detalle: Object.entries(S.c).map(([k,x])=>k+' '+x.s+' ('+x.t+')').join('; '),
-    motivo:v('motivo'), especialidad:v('especialidad'), criterio_cartera:(cartera()||{}).criterio||'', posoperatorio:radio('posoperatorio'), fecha_cirugia:v('fechaCirugia'), dias_posoperatorio:calcularDiasPosop(), especialidad_cirugia:v('especialidadQx'), procedimiento_cirugia:v('procedimientoQx'), complicacion_postquirurgica:radio('complicacionQx'), clasificacion_posoperatorio:clasificacionPosop(), lesion_piel_partes_blandas_drenaje:radio('lesionDrenaje'), anexa_imagen_informe_lesion:$('anexoLesion').checked?'Confirmado':'No confirmado', observacion_no_cartera:v('obsCartera'), rea:radio('rea'), imagenes: radio('imagenes')==='Sí' ? 'Sí — adjunto, enviado aparte' : radio('imagenes'), laboratorios: radio('laboratorios')==='Sí' ? 'Sí — adjunto, enviado aparte' : radio('laboratorios'),
+    motivo:v('motivo'), cie10:v('cie10'), especialidad:v('especialidad'), criterio_cartera:(cartera()||{}).criterio||'', posoperatorio:radio('posoperatorio'), fecha_cirugia:v('fechaCirugia'), dias_posoperatorio:calcularDiasPosop(), especialidad_cirugia:v('especialidadQx'), procedimiento_cirugia:v('procedimientoQx'), complicacion_postquirurgica:radio('complicacionQx'), clasificacion_posoperatorio:clasificacionPosop(), lesion_piel_partes_blandas_drenaje:radio('lesionDrenaje'), anexa_imagen_informe_lesion:$('anexoLesion').checked?'Confirmado':'No confirmado', observacion_no_cartera:v('obsCartera'), rea:radio('rea'), imagenes: radio('imagenes')==='Sí' ? 'Sí — adjunto, enviado aparte' : radio('imagenes'), laboratorios: radio('laboratorios')==='Sí' ? 'Sí — adjunto, enviado aparte' : radio('laboratorios'),
     tecnicas_qx: radio('tecnicas')==='Sí' ? 'Sí — adjunto, enviado aparte' : radio('tecnicas'), procedimientos_previos:radio('procedimientos'),
     medico:v('medico'), telefono:v('telefono'), hora_presentacion:v('hora'), institucion:v('institucion'),
     _news:N, _sofa:S
@@ -485,12 +493,13 @@ function validar(){
   const req=[...document.querySelectorAll('#f [required]')]; let first=null;
   req.forEach(el=>{ if(!el.value.trim()){ el.classList.add('invalid'); first=first||el; } });
   if(!$('comorbNinguna').checked && !document.querySelectorAll('input[name=comorb]:checked,input[name=comorbCV]:checked').length){ $('comorbLabel').scrollIntoView({behavior:'smooth',block:'center'}); toast('Marcá las patologías de base o "Ninguna"'); return false; }
+  if(!$('comorbCVNinguna').checked && !document.querySelectorAll('input[name=comorbCV]:checked').length){ $('cvLabel').scrollIntoView({behavior:'smooth',block:'center'}); toast('Marcá la condición cardiovascular o "Ninguna"'); return false; }
   if($('comorbERC').checked && !radio('dialisis')){ $('dialisisWrap').scrollIntoView({behavior:'smooth',block:'center'}); toast('Indicá si la ERC está en diálisis'); return false; }
   if(!radio('situacion')){ $('situacionBox').scrollIntoView({behavior:'smooth',block:'center'}); toast('Indicá si el paciente presenta alguna de las condiciones (o Ninguna)'); return false; }
   if(radio('posoperatorio')==='Sí'){ const reqQx=['fechaCirugia','especialidadQx']; if(!radio('opHeqi')){ $('opheqi-si').closest('.full').scrollIntoView({behavior:'smooth',block:'center'}); toast('Indicá si fue operado en HEQI'); return false; } for(const id of reqQx){if(!$(id).value.trim()){ $(id).classList.add('invalid'); $(id).scrollIntoView({behavior:'smooth',block:'center'}); $(id).focus({preventScroll:true}); toast('Completá los datos de la cirugía'); return false;}} if(!radio('complicacionQx')){ $('compqx-si').closest('.full').scrollIntoView({behavior:'smooth',block:'center'}); toast('Indicá si existe una complicación relacionada con la cirugía'); return false; }}
   if(radio('lesionDrenaje')==='Sí'&&!$('anexoLesion').checked){ $('anexoLesion').classList.add('invalid'); $('anexoLesion').scrollIntoView({behavior:'smooth',block:'center'}); toast('Es obligatorio anexar la imagen de la lesión con su informe'); return false; }
   actualizarObservacionCartera();
-  if($('especialidad').value===NC&&!$('obsCartera').value.trim()){ $('obsCartera').classList.add('invalid'); $('obsCartera').scrollIntoView({behavior:'smooth',block:'center'}); $('obsCartera').focus({preventScroll:true}); toast('Definí por qué solicita la derivación a Ingavi'); return false; }
+  if((esResultadoNC()||$('especialidad').value.indexOf('VALORACIÓN INDIVIDUAL')===0)&&!$('obsCartera').value.trim()){ $('obsCartera').classList.add('invalid'); $('obsCartera').scrollIntoView({behavior:'smooth',block:'center'}); $('obsCartera').focus({preventScroll:true}); toast('Definí por qué solicita la derivación a Ingavi'); return false; }
   if(first){ first.scrollIntoView({behavior:'smooth',block:'center'}); setTimeout(()=>first.focus({preventScroll:true}),350); toast('Completá los campos marcados en rojo'); return false; }
   return true;
 }
@@ -516,14 +525,16 @@ async function buildPDF(d){
   center('FORMULARIO DE DERIVACIÓN — USO EXCLUSIVO MÉDICO',B,8,TX,y); y-=10;
   center('Generado: '+d.fecha_envio,F,7,TX,y); y-=14;
   // Destacado: 1) especialidad, 2) paciente, 3) lugar de referencia
-  { const nc=String(d.especialidad||'').indexOf('NO CORRESPONDE')===0;
-    const espTxt='ESPECIALIDAD: '+String(d.especialidad||'—').toUpperCase()+(d.rea==='Sí'?' + REANIMACIÓN (REA)':'');
+  { const e0=String(d.especialidad||''); const nc=[ETQ_NC,ETQ_PED,ETQ_NOREC,ETQ_CONF].includes(e0)||e0.indexOf('NO CORRESPONDE')===0;
+    const espTxt=(nc?'RESULTADO: ':'ESPECIALIDAD: ')+String(d.especialidad||'—').toUpperCase()+(d.rea==='Sí'&&!nc?' + REANIMACIÓN (REA)':'');
     const espL=wrap(safe(espTxt,B),B,13,TW-16);
-    const criL=d.criterio_cartera?wrap(safe('Cartera de Servicios: '+d.criterio_cartera,F),F,8.5,TW-16):[];
+    const criTxt=nc ? (e0===ETQ_PED?'Esta solicitud es pediátrica (menor de 18 años) y no puede resolverse en Ingavi. Admisión la derivará a la red correspondiente.':e0===ETQ_NOREC?'No se identificó el diagnóstico en la cartera de Ingavi. Ver la observación del médico que deriva.':e0===ETQ_CONF?'Urología solo recibe con diagnóstico confirmado (imagen o laboratorio).':'Esta solicitud no puede resolverse en Ingavi porque no cuenta con el servicio ('+String(d.criterio_cartera||'').replace(/^HEQI no cuenta con /,'')+'). Admisión la derivará a la red correspondiente.') : (d.criterio_cartera?'Cartera de Servicios: '+d.criterio_cartera:'');
+    const criL=criTxt?wrap(safe(criTxt,F),F,8.5,TW-16):[];
     const pacL=wrap(safe('PACIENTE: '+(d.nombre||'—')+(d.edad?' · '+d.edad+' años':'')+(d.ci?' · CI '+d.ci:''),B),B,10.5,TW-16);
     const refL=wrap(safe('REFERENCIA: '+(d.institucion||'—')+(d.medico?' · '+d.medico:'')+(d.telefono?' · Tel. '+d.telefono:''),B),B,10,TW-16);
     const h=espL.length*16+criL.length*10.5+pacL.length*13+refL.length*12.5+14;
-    const colBorde=nc?rgb(.70,.15,.12):AZ, fondo=nc?rgb(.99,.93,.92):rgb(.91,.94,.98);
+    const vi=String(d.especialidad||'').indexOf('VALORACIÓN INDIVIDUAL')===0;
+    const colBorde=nc?rgb(.70,.15,.12):vi?rgb(.72,.38,0):AZ, fondo=nc?rgb(.99,.93,.92):vi?rgb(1,.95,.87):rgb(.91,.94,.98);
     page.drawRectangle({x:M,y:y-h,width:TW,height:h,color:fondo,borderColor:colBorde,borderWidth:1.4});
     let ty=y-17; espL.forEach(l=>{ page.drawText(l,{x:M+8,y:ty,size:13,font:B,color:colBorde}); ty-=16; });
     criL.forEach(l=>{ page.drawText(l,{x:M+8,y:ty+3,size:8.5,font:F,color:colBorde}); ty-=10.5; });
@@ -578,7 +589,7 @@ async function buildPDF(d){
   box(S.n?('SOFA: '+S.total+' puntos ('+S.n+'/6 componentes) — '+Object.entries(S.c).map(([k,x])=>k+' '+x.s+' ('+x.t+')').join(', ')):'SOFA: sin datos suficientes', AZ);
   y-=10;
   sec('SOLICITUD DE TRASLADO',[
-    [L('Diagnóstico explícito principal de la derivación'),V(d.motivo,3)],
+    [L('Diagnóstico explícito principal de la derivación'),V(d.motivo+(d.cie10?' (CIE-10 '+d.cie10+')':''),3)],
     [L('Lesión de piel y partes blandas con imagen que indique necesidad de drenaje o desbridamiento'),V(d.lesion_piel_partes_blandas_drenaje),L('Imagen e informe anexos'),V(d.lesion_piel_partes_blandas_drenaje==='Sí'?d.anexa_imagen_informe_lesion:'No corresponde')],
     [L('Posoperatorio reciente / complicación de cirugía previa'),V(d.posoperatorio),L('Fecha de cirugía / días transcurridos'),V(d.fecha_cirugia?d.fecha_cirugia+' / '+d.dias_posoperatorio+' día(s)':'No corresponde')],
     ...(d.posoperatorio==='Sí' ? [[L('Especialidad responsable de cirugía'),V(d.especialidad_cirugia),L('Clasificación temporal'),V(d.clasificacion_posoperatorio)],[L('Operado en HEQI'),V(d.operado_heqi,3)],[L('Complicación relacionada con cirugía'),V(d.complicacion_postquirurgica,3)]] : []),
@@ -596,8 +607,8 @@ async function buildPDF(d){
   ]);
   // Recuadro rojo: HEQI no cuenta con
   { const R=rgb(.70,.15,.12);
-    const t1='HEQI NO CUENTA CON: ENDOSCOPIA DE URGENCIA NI AMBULATORIA (HEMORRAGIA DIGESTIVA ALTA, GASTROSTOMÍA, CPRE DE URGENCIA) - ANGIOGRAFÍA / HEMODINAMIA (DIAGNÓSTICA O TERAPÉUTICA) - RADIOLOGÍA INTERVENCIONISTA / CIRUGÍA MÍNIMAMENTE INVASIVA: DRENAJES PERCUTÁNEOS GUIADOS O CON CATÉTER MULTIPROPÓSITO - CIRUGÍA TRANSESFENOIDAL NI BIOPSIA ESTEREOTÁXICA - CIRUGÍA VASCULAR COMPLEJA (AOC, AMPUTACIÓN POR PIE DIABÉTICO) - CIRUGÍA PLÁSTICA Y QUEMADOS.';
-    const t2='Estas solicitudes son respondidas automáticamente por Admisión como NO CORRESPONDE (fuera de cartera de servicios).';
+    const t1='HEQI NO CUENTA CON: ENDOSCOPIA / CPRE DE URGENCIA - ANGIOGRAFÍA / HEMODINAMIA - RADIOLOGÍA INTERVENCIONISTA / MÍNIMA INVASIÓN: DRENAJES PERCUTÁNEOS O CATÉTER MULTIPROPÓSITO - CIRUGÍA TRANSESFENOIDAL - UNIDAD CORONARIA NI CARDIOCIRUGÍA - CIRUGÍA VASCULAR COMPLEJA - CIRUGÍA PLÁSTICA Y QUEMADOS.';
+    const t2='Estas solicitudes no corresponden a la cartera de servicios de HEQI. Admisión le recomendará el centro de la red que corresponde, para redireccionar la presentación del caso.';
     const l1=wrap(safe(t1,B),B,9,TW-16), l2=wrap(safe(t2,B),B,8,TW-16), h=l1.length*11.5+l2.length*10+14;
     if(y-h<26) nuevaPag();
     page.drawRectangle({x:M,y:y-h,width:TW,height:h,color:rgb(.99,.93,.92),borderColor:R,borderWidth:2});
@@ -646,14 +657,53 @@ const inestable=()=>{ const N=news2(); return (N.total||0)>=5 || Object.values(N
 const altoRiesgo=()=>{ const N=news2(); return (N.total||0)>=7 || Object.values(N.p||{}).some(x=>x===3); };
 const SOSPECHA=/descartar|d\/c|sospecha|probable|posible|compatible con|impresiona|\?\s*$/;
 // Sinónimos, siglas y errores de tipeo frecuentes
+const LISTA_DX=[{"t": "Angina de Ludwig", "s": "ludwig, flemon de piso de boca, celulitis submandibular", "c": "K12.2", "e": "Polivalente", "o": ""}, {"t": "Absceso retrofaríngeo", "s": "absceso retrofaringeo, absceso faringeo", "c": "J39.0", "e": "Polivalente", "o": ""}, {"t": "Absceso parafaríngeo / laterofaríngeo", "s": "absceso laterofaringeo, absceso parafaringeo", "c": "J39.0", "e": "Polivalente", "o": ""}, {"t": "Flemón cervical profundo", "s": "flemon cervical, absceso de cuello, absceso cervical", "c": "L03.8", "e": "Polivalente", "o": ""}, {"t": "Fascitis necrotizante cervical", "s": "fascitis cervical, fascitis de cuello", "c": "M72.6", "e": "Polivalente", "o": ""}, {"t": "Sinusitis complicada con absceso subperióstico", "s": "sinusitis complicada, absceso subperiostico", "c": "J01.9", "e": "Polivalente", "o": ""}, {"t": "ACV hemorrágico / hematoma intraparenquimatoso", "s": "acv hemorragico, hip, hematoma intracerebral, hemorragia intraparenquimatosa", "c": "I61.9", "e": "Polivalente", "o": "No traumático"}, {"t": "Hemorragia subaracnoidea no traumática", "s": "hsa, hemorragia subaracnoidea, hsa aneurismatica", "c": "I60.9", "e": "Polivalente", "o": "No traumática"}, {"t": "Hematoma subdural crónico", "s": "hsd cronico, hematoma subdural", "c": "I62.0", "e": "Polivalente", "o": "No traumático (si es traumático: Cirugía)"}, {"t": "Aneurisma cerebral", "s": "aneurisma intracraneal, clipado", "c": "I67.1", "e": "Polivalente", "o": "Clipado sí; embolización no corresponde"}, {"t": "Malformación arteriovenosa cerebral", "s": "mav, malformacion arteriovenosa", "c": "Q28.2", "e": "Polivalente", "o": ""}, {"t": "Tumor intracraneal", "s": "tumor cerebral, loe, lesion ocupante de espacio, masa cerebral", "c": "D43.2", "e": "Polivalente", "o": ""}, {"t": "Glioblastoma / glioma", "s": "glioblastoma, glioma, astrocitoma", "c": "C71.9", "e": "Polivalente", "o": ""}, {"t": "Meningioma", "s": "meningioma", "c": "D32.0", "e": "Polivalente", "o": ""}, {"t": "Metástasis cerebral", "s": "mts cerebral, metastasis cerebral", "c": "C79.3", "e": "Polivalente", "o": ""}, {"t": "Tumor de hipófisis / selar", "s": "adenoma hipofisario, macroadenoma, tumor selar", "c": "D35.2", "e": "Polivalente", "o": "Si requiere vía transesfenoidal: NO CORRESPONDE"}, {"t": "Hidrocefalia aguda obstructiva", "s": "hidrocefalia, hidrocefalia obstructiva", "c": "G91.1", "e": "Polivalente", "o": ""}, {"t": "Disfunción valvular (derivación ventrículo peritoneal)", "s": "disfuncion valvular, valvula, dvp, derivacion ventriculo peritoneal", "c": "T85.0", "e": "Polivalente", "o": ""}, {"t": "Ventriculitis", "s": "ventriculitis", "c": "G04.9", "e": "Polivalente", "o": ""}, {"t": "Absceso cerebral", "s": "absceso cerebral", "c": "G06.0", "e": "Polivalente", "o": ""}, {"t": "Empiema subdural", "s": "empiema subdural", "c": "G06.2", "e": "Polivalente", "o": ""}, {"t": "Infarto cerebral maligno con indicación de craniectomía descompresiva", "s": "acv isquemico maligno, infarto maligno, craniectomia descompresiva, hemicraniectomia", "c": "I63.9", "e": "Polivalente", "o": "Solo con indicación descompresiva"}, {"t": "Infarto cerebeloso con indicación descompresiva", "s": "infarto cerebeloso", "c": "I63.9", "e": "Polivalente", "o": "Solo con indicación descompresiva"}, {"t": "Hematoma de fosa posterior", "s": "hematoma fosa posterior, hematoma cerebeloso", "c": "I61.4", "e": "Polivalente", "o": ""}, {"t": "Fístula de LCR", "s": "fistula lcr, fistula de liquido cefalorraquideo", "c": "G96.0", "e": "Polivalente", "o": ""}, {"t": "Neuralgia del trigémino", "s": "neuralgia trigemino", "c": "G50.0", "e": "Polivalente", "o": ""}, {"t": "Lesión cerebral para biopsia estereotáxica", "s": "biopsia estereotaxica, biopsia cerebral profunda", "c": "D43.2", "e": "Polivalente", "o": ""}, {"t": "Hernia discal lumbar con radiculopatía", "s": "hernia discal, hnp, radiculopatia, l4-l5, l5-s1", "c": "M51.1", "e": "Polivalente", "o": ""}, {"t": "Hernia discal cervical con radiculopatía", "s": "hernia cervical, c5-c6, c6-c7, radiculopatia cervical", "c": "M50.1", "e": "Polivalente", "o": ""}, {"t": "Protrusión / extrusión discal", "s": "protrusion discal, extrusion discal, discopatia", "c": "M51.2", "e": "Polivalente", "o": ""}, {"t": "Estenosis de canal lumbar", "s": "estenosis de canal, conducto estrecho", "c": "M48.0", "e": "Polivalente", "o": ""}, {"t": "Mielopatía cervical espondilótica", "s": "mielopatia cervical, estenosis cervical", "c": "M47.1", "e": "Polivalente", "o": ""}, {"t": "Espondilolistesis", "s": "listesis, espondilolistesis", "c": "M43.1", "e": "Polivalente", "o": ""}, {"t": "Espondilodiscitis", "s": "discitis, espondilodiscitis, infeccion de columna", "c": "M46.4", "e": "Polivalente", "o": ""}, {"t": "Absceso epidural espinal", "s": "absceso epidural", "c": "G06.1", "e": "Polivalente", "o": ""}, {"t": "Mal de Pott (tuberculosis vertebral)", "s": "pott, tbc vertebral", "c": "A18.0", "e": "Polivalente", "o": ""}, {"t": "Tumor medular / de columna", "s": "tumor medular, tumor intramedular, ependimoma, tumor de columna", "c": "D43.4", "e": "Polivalente", "o": ""}, {"t": "Metástasis vertebral", "s": "mts vertebral, metastasis de columna", "c": "C79.5", "e": "Polivalente", "o": ""}, {"t": "Hematoma epidural espinal espontáneo", "s": "hematoma epidural espinal", "c": "G95.1", "e": "Polivalente", "o": ""}, {"t": "Siringomielia", "s": "siringomielia", "c": "G95.0", "e": "Polivalente", "o": ""}, {"t": "Malformación de Chiari", "s": "chiari", "c": "Q07.0", "e": "Polivalente", "o": ""}, {"t": "Escoliosis / cifoescoliosis", "s": "escoliosis, cifoescoliosis", "c": "M41.9", "e": "Polivalente", "o": ""}, {"t": "Complicación de artrodesis de columna", "s": "artrodesis, retiro de material de columna, aflojamiento de tornillos", "c": "T84.4", "e": "Polivalente", "o": ""}, {"t": "Celulitis abscedada", "s": "celulitis, absceso de piel, flemon", "c": "L02.9", "e": "Polivalente", "o": "Si hay imagen con indicación de drenaje: marcar la opción de drenaje"}, {"t": "Absceso glúteo", "s": "absceso gluteo", "c": "L02.3", "e": "Polivalente", "o": ""}, {"t": "Fascitis necrotizante", "s": "fascitis necrotizante, fascitis", "c": "M72.6", "e": "Polivalente", "o": ""}, {"t": "Artritis séptica", "s": "artritis septica, pioartros", "c": "M00.9", "e": "Polivalente", "o": ""}, {"t": "Piomiositis", "s": "piomiositis, absceso muscular", "c": "M60.0", "e": "Polivalente", "o": ""}, {"t": "Osteomielitis aguda con absceso", "s": "osteomielitis", "c": "M86.1", "e": "Polivalente", "o": ""}, {"t": "Lesión por presión con criterio de desbridamiento", "s": "escara, upp, ulcera por presion", "c": "L89.9", "e": "Polivalente", "o": ""}, {"t": "Mastitis / absceso mamario", "s": "mastitis, absceso de mama, absceso retroareolar", "c": "N61", "e": "Polivalente", "o": ""}, {"t": "Complicación de prótesis articular (operado en HEQI)", "s": "infeccion de protesis, protesis de cadera, protesis de rodilla, artroplastia", "c": "T84.5", "e": "Polivalente", "o": "Operado fuera de HEQI: VALORACIÓN INDIVIDUAL"}, {"t": "Empiema pleural", "s": "empiema, piotorax", "c": "J86.9", "e": "Polivalente", "o": ""}, {"t": "Neumonía complicada con derrame pleural", "s": "derrame paraneumonico, neumonia complicada", "c": "J18.9", "e": "Polivalente", "o": ""}, {"t": "Mediastinitis", "s": "mediastinitis", "c": "J98.5", "e": "Polivalente", "o": ""}, {"t": "Urosepsis / pionefrosis obstructiva", "s": "urosepsis, pionefrosis, sepsis urinaria", "c": "N13.6", "e": "Polivalente", "o": ""}, {"t": "Absceso renal / perirrenal", "s": "absceso renal, absceso perirrenal", "c": "N15.1", "e": "Polivalente", "o": ""}, {"t": "Litiasis renal", "s": "calculo renal, nefrolitiasis", "c": "N20.0", "e": "Urología", "o": "Requiere diagnóstico confirmado. Inestable (NEWS2 ≥ 5 o parámetro en 3): Polivalente"}, {"t": "Litiasis ureteral", "s": "calculo ureteral, ureterolitiasis", "c": "N20.1", "e": "Urología", "o": "Requiere diagnóstico confirmado. Inestable (NEWS2 ≥ 5 o parámetro en 3): Polivalente"}, {"t": "Cólico renal", "s": "colico nefritico, colico renoureteral", "c": "N23", "e": "Urología", "o": "Requiere diagnóstico confirmado. Inestable (NEWS2 ≥ 5 o parámetro en 3): Polivalente"}, {"t": "Hidronefrosis", "s": "hidronefrosis, uropatia obstructiva", "c": "N13.3", "e": "Urología", "o": "Requiere diagnóstico confirmado. Inestable (NEWS2 ≥ 5 o parámetro en 3): Polivalente"}, {"t": "Uropatía obstructiva con indicación de nefrostomía percutánea", "s": "nefrostomia, uropatia obstructiva", "c": "N13.9", "e": "Urología", "o": "Requiere diagnóstico confirmado. Inestable (NEWS2 ≥ 5 o parámetro en 3): Polivalente"}, {"t": "Retención aguda de orina", "s": "rao, globo vesical", "c": "R33", "e": "Urología", "o": "Inestable o pluripatológico inestable: Polivalente"}, {"t": "Hematuria con retención por coágulos", "s": "hematuria, coagulos", "c": "R31", "e": "Urología", "o": "Inestable: Polivalente"}, {"t": "Hiperplasia prostática complicada", "s": "hbp, hiperplasia de prostata", "c": "N40", "e": "Urología", "o": "Requiere diagnóstico confirmado. Inestable (NEWS2 ≥ 5 o parámetro en 3): Polivalente"}, {"t": "Prostatitis aguda", "s": "prostatitis", "c": "N41.0", "e": "Urología", "o": "Requiere diagnóstico confirmado. Inestable (NEWS2 ≥ 5 o parámetro en 3): Polivalente"}, {"t": "Pielonefritis aguda", "s": "pielonefritis", "c": "N10", "e": "Urología", "o": "Requiere diagnóstico confirmado. Inestable (NEWS2 ≥ 5 o parámetro en 3): Polivalente"}, {"t": "Infección urinaria complicada", "s": "itu, ivu, infeccion urinaria", "c": "N39.0", "e": "Urología", "o": "Requiere diagnóstico confirmado. Inestable (NEWS2 ≥ 5 o parámetro en 3): Polivalente"}, {"t": "Torsión testicular", "s": "torsion testicular, torsion del cordon", "c": "N44", "e": "Urología", "o": "Requiere diagnóstico confirmado. Inestable (NEWS2 ≥ 5 o parámetro en 3): Polivalente"}, {"t": "Orquiepididimitis", "s": "orquitis, epididimitis", "c": "N45.9", "e": "Urología", "o": "Requiere diagnóstico confirmado. Inestable (NEWS2 ≥ 5 o parámetro en 3): Polivalente"}, {"t": "Priapismo", "s": "priapismo", "c": "N48.3", "e": "Urología", "o": "Requiere diagnóstico confirmado. Inestable (NEWS2 ≥ 5 o parámetro en 3): Polivalente"}, {"t": "Parafimosis", "s": "parafimosis", "c": "N47", "e": "Urología", "o": "Requiere diagnóstico confirmado. Inestable (NEWS2 ≥ 5 o parámetro en 3): Polivalente"}, {"t": "Balanopostitis", "s": "balanitis, balanopostitis", "c": "N48.1", "e": "Urología", "o": "Requiere diagnóstico confirmado. Inestable (NEWS2 ≥ 5 o parámetro en 3): Polivalente"}, {"t": "Dolor o complicación en portador de catéter doble J", "s": "doble j, pig tail, cateter ureteral", "c": "T83.1", "e": "Urología", "o": "Requiere diagnóstico confirmado. Inestable (NEWS2 ≥ 5 o parámetro en 3): Polivalente"}, {"t": "Cuerpo extraño ureteral", "s": "cuerpo extrano ureteral", "c": "T19.8", "e": "Urología", "o": "Requiere diagnóstico confirmado. Inestable (NEWS2 ≥ 5 o parámetro en 3): Polivalente"}, {"t": "Trauma renal aislado", "s": "trauma renal, contusion renal", "c": "S37.0", "e": "Urología", "o": "Con politrauma: Cirugía General y Trauma"}, {"t": "Trauma testicular / urogenital aislado", "s": "trauma testicular, trauma urogenital, trauma escrotal", "c": "S37.9", "e": "Urología", "o": "Con politrauma: Cirugía General y Trauma"}, {"t": "Tumor renal", "s": "tumor renal, masa renal", "c": "D41.0", "e": "Urología", "o": "Requiere diagnóstico confirmado. Inestable (NEWS2 ≥ 5 o parámetro en 3): Polivalente"}, {"t": "Apendicitis aguda", "s": "apendicitis, apendicular, fid", "c": "K35.8", "e": "Cirugía General y Trauma", "o": "Acepta sospecha (ej.: a descartar)"}, {"t": "Abdomen agudo quirúrgico", "s": "abdomen agudo, dolor abdominal agudo", "c": "R10.0", "e": "Cirugía General y Trauma", "o": "Acepta sospecha"}, {"t": "Dolor abdominal a descartar patología quirúrgica", "s": "dolor abdominal", "c": "R10.4", "e": "Cirugía General y Trauma", "o": "Acepta sospecha"}, {"t": "Colecistitis aguda", "s": "colecistitis", "c": "K81.0", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Litiasis vesicular sintomática", "s": "colelitiasis, litiasis biliar, calculos en vesicula", "c": "K80.2", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Coledocolitiasis", "s": "coledocolitiasis, cpre programada", "c": "K80.5", "e": "Cirugía General y Trauma", "o": "CPRE programada sí; CPRE de urgencia no"}, {"t": "Colangitis aguda (requiere CPRE de urgencia)", "s": "colangitis, cpre de urgencia", "c": "K83.0", "e": "NO CORRESPONDE", "o": "No hay CPRE de urgencia (la CPRE programada sí)"}, {"t": "Ictericia obstructiva", "s": "ictericia obstructiva", "c": "K83.1", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Pancreatitis aguda biliar", "s": "pancreatitis biliar, pancreatitis litiasica", "c": "K85.1", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Pancreatitis aguda complicada (necrosis infectada, colección)", "s": "pancreatitis, necrosis pancreatica, pseudoquiste", "c": "K85.9", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Diverticulitis aguda", "s": "diverticulitis", "c": "K57.3", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Diverticulitis perforada", "s": "diverticulitis complicada", "c": "K57.2", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Peritonitis", "s": "peritonitis", "c": "K65.0", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Perforación de víscera hueca", "s": "viscera hueca perforada, neumoperitoneo", "c": "K63.1", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Úlcera péptica perforada", "s": "ulcera perforada", "c": "K27.5", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Perforación esofágica", "s": "perforacion de esofago", "c": "K22.3", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Síndrome de oclusión intestinal", "s": "oclusion intestinal, obstruccion intestinal, sindrome oclusivo", "c": "K56.6", "e": "Cirugía General y Trauma", "o": "Acepta sospecha (descartar síndrome oclusivo)"}, {"t": "Oclusión intestinal por bridas", "s": "bridas, adherencias", "c": "K56.5", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Íleo", "s": "ileo", "c": "K56.7", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Vólvulo", "s": "volvulo", "c": "K56.2", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Isquemia mesentérica", "s": "isquemia intestinal", "c": "K55.0", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Abdomen agudo en paciente diabético o inmunodeprimido", "s": "abdomen agudo cronico", "c": "R10.0", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Hernia inguinal incarcerada / estrangulada", "s": "hernia inguinal, hernia atascada", "c": "K40.3", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Hernia crural complicada", "s": "hernia femoral", "c": "K41.3", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Hernia umbilical complicada", "s": "hernia umbilical", "c": "K42.0", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Eventración complicada", "s": "eventracion, hernia incisional", "c": "K43.0", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Infección de sitio quirúrgico (operado en HEQI)", "s": "isq, herida operatoria infectada", "c": "T81.4", "e": "Cirugía General y Trauma", "o": "Operado fuera de HEQI: VALORACIÓN INDIVIDUAL"}, {"t": "Dehiscencia de herida / pared abdominal", "s": "dehiscencia, evisceracion", "c": "T81.3", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Abdomen abierto (laparostomía contenida)", "s": "abdomen abierto, bolsa de bogota", "c": "", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Fascitis necrotizante de pared abdominal", "s": "fascitis de pared", "c": "M72.6", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Absceso perianal", "s": "absceso perianal, absceso anal", "c": "K61.0", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Absceso isquiorrectal", "s": "absceso isquiorrectal", "c": "K61.3", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Fístula perianal", "s": "fistula anal", "c": "K60.3", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Quiste pilonidal con absceso", "s": "pilonidal", "c": "L05.0", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Hemorroides trombosadas", "s": "hemorroides", "c": "K64.5", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Gangrena de Fournier", "s": "fournier", "c": "N49.3", "e": "Cirugía General y Trauma", "o": "Interconsulta con Urología si el foco es genital"}, {"t": "Hemorragia digestiva alta", "s": "hda, sangrado digestivo alto", "c": "K92.2", "e": "NO CORRESPONDE", "o": "No hay endoscopia de urgencia"}, {"t": "Hematemesis", "s": "hematemesis", "c": "K92.0", "e": "NO CORRESPONDE", "o": "No hay endoscopia de urgencia"}, {"t": "Melena", "s": "melena", "c": "K92.1", "e": "NO CORRESPONDE", "o": "No hay endoscopia de urgencia"}, {"t": "Várices esofágicas sangrantes", "s": "varices esofagicas", "c": "I85.0", "e": "NO CORRESPONDE", "o": "No hay endoscopia de urgencia"}, {"t": "Úlcera péptica sangrante", "s": "ulcera sangrante", "c": "K27.4", "e": "NO CORRESPONDE", "o": "No hay endoscopia de urgencia"}, {"t": "Hemorragia digestiva baja", "s": "hdb, sangrado digestivo bajo", "c": "K92.2", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Rectorragia", "s": "rectorragia, hematoquecia, proctorragia", "c": "K62.5", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Politraumatizado", "s": "politrauma, politraumatismo, accidente de transito", "c": "T07", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Traumatismo craneoencefálico (TEC)", "s": "tec, tce, trauma de craneo", "c": "S06.9", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Hematoma epidural traumático", "s": "hematoma epidural", "c": "S06.4", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Hematoma subdural agudo traumático", "s": "hsd agudo traumatico", "c": "S06.5", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Contusión cerebral", "s": "contusion hemorragica", "c": "S06.3", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Fractura de cráneo", "s": "fractura craneal, hundimiento craneal", "c": "S02.9", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Trauma maxilofacial", "s": "trauma facial, trauma de cara", "c": "S09.9", "e": "Cirugía General y Trauma", "o": "Evaluación multidisciplinaria (Cirugía / Traumatología / Maxilofacial)"}, {"t": "Fractura de mandíbula", "s": "fractura mandibular", "c": "S02.6", "e": "Cirugía General y Trauma", "o": "Evaluación multidisciplinaria"}, {"t": "Fractura malar / cigomática", "s": "fractura malar", "c": "S02.4", "e": "Cirugía General y Trauma", "o": "Evaluación multidisciplinaria"}, {"t": "Fractura de huesos propios nasales", "s": "fractura nasal", "c": "S02.2", "e": "Cirugía General y Trauma", "o": "Evaluación multidisciplinaria"}, {"t": "Herida de cuello", "s": "herida cervical, trauma de cuello", "c": "S11.9", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Trauma de tórax", "s": "trauma toracico", "c": "S29.9", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Neumotórax", "s": "neumotorax, neumotorax a tension", "c": "J93.9", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Hemotórax", "s": "hemotorax", "c": "S27.1", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Fracturas costales", "s": "fractura costal, fractura de costillas", "c": "S22.4", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Tórax inestable (volet costal)", "s": "volet costal, torax inestable", "c": "S22.5", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Contusión pulmonar", "s": "contusion pulmonar", "c": "S27.3", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Trauma abdominal cerrado", "s": "trauma abdominal", "c": "S36.9", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Herida de arma blanca", "s": "hab, arma blanca, herida penetrante", "c": "T14.1", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Herida de arma de fuego", "s": "haf, paf, arma de fuego", "c": "T14.1", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Fractura de cadera", "s": "fractura de cuello de femur, fractura intertrocanterica", "c": "S72.0", "e": "Traumatología", "o": "Pluripatológico con NEWS2 ≥ 7 o parámetro en 3: alerta de evaluación multidisciplinaria integral"}, {"t": "Fractura de fémur", "s": "fx de femur", "c": "S72.9", "e": "Traumatología", "o": "Pluripatológico con NEWS2 ≥ 7 o parámetro en 3: alerta de evaluación multidisciplinaria integral"}, {"t": "Fractura de tibia / peroné", "s": "fx de tibia, fractura de pierna", "c": "S82.2", "e": "Traumatología", "o": ""}, {"t": "Fractura de tobillo", "s": "fractura bimaleolar, fractura de maleolo", "c": "S82.8", "e": "Traumatología", "o": ""}, {"t": "Fractura de radio distal", "s": "fractura de muneca, colles", "c": "S52.5", "e": "Traumatología", "o": ""}, {"t": "Fractura de antebrazo", "s": "fractura de radio y cubito", "c": "S52.9", "e": "Traumatología", "o": ""}, {"t": "Fractura de húmero", "s": "fractura humeral, supracondilea", "c": "S42.3", "e": "Traumatología", "o": ""}, {"t": "Fractura de clavícula", "s": "fractura de clavicula", "c": "S42.0", "e": "Traumatología", "o": ""}, {"t": "Fractura de mano / dedos", "s": "fractura de metacarpiano, fractura de falange", "c": "S62.9", "e": "Traumatología", "o": ""}, {"t": "Fractura de pie", "s": "fractura de metatarsiano, calcaneo", "c": "S92.9", "e": "Traumatología", "o": ""}, {"t": "Fractura de pelvis", "s": "fractura pelviana, acetabulo", "c": "S32.8", "e": "Traumatología", "o": "Politrauma, TEC, tórax o abdomen asociado: Cirugía General y Trauma"}, {"t": "Fractura expuesta", "s": "fractura abierta", "c": "T14.2", "e": "Traumatología", "o": ""}, {"t": "Luxación de hombro", "s": "luxacion glenohumeral", "c": "S43.0", "e": "Traumatología", "o": ""}, {"t": "Luxación de codo", "s": "luxacion codo", "c": "S53.1", "e": "Traumatología", "o": ""}, {"t": "Luxación de cadera", "s": "luxacion coxofemoral", "c": "S73.0", "e": "Traumatología", "o": ""}, {"t": "Luxación de rodilla", "s": "luxacion rodilla", "c": "S83.1", "e": "Traumatología", "o": ""}, {"t": "Síndrome compartimental", "s": "compartimental", "c": "T79.6", "e": "Traumatología", "o": ""}, {"t": "Amputación traumática", "s": "amputacion de dedo, amputacion de mano, amputacion traumatica", "c": "T14.7", "e": "Traumatología", "o": "Amputación por pie diabético o AOC: NO CORRESPONDE"}, {"t": "Lesión tendinosa de mano", "s": "tendon, seccion tendinosa", "c": "S66.9", "e": "Traumatología", "o": ""}, {"t": "Herida compleja de miembro", "s": "herida de mano, herida de pierna", "c": "T14.1", "e": "Traumatología", "o": ""}, {"t": "Esguince de tobillo", "s": "torcedura de tobillo", "c": "S93.4", "e": "Traumatología", "o": ""}, {"t": "Contusión de rodilla", "s": "golpe de rodilla, trauma de rodilla", "c": "S80.0", "e": "Traumatología", "o": ""}, {"t": "Fractura vertebral cervical", "s": "fractura cervical, fx c5", "c": "S12.9", "e": "Traumatología", "o": "Evaluación por Neurocirugía según indicación. Politrauma, TEC, tórax o abdomen asociado: Cirugía General y Trauma"}, {"t": "Fractura de odontoides", "s": "odontoides, fractura de c2", "c": "S12.1", "e": "Traumatología", "o": "Evaluación por Neurocirugía según indicación"}, {"t": "Luxación / subluxación cervical", "s": "luxacion cervical, luxacion atlantoaxoidea, facetaria", "c": "S13.1", "e": "Traumatología", "o": "Evaluación por Neurocirugía según indicación"}, {"t": "Lesión medular cervical traumática", "s": "lesion medular cervical, cuadriparesia traumatica", "c": "S14.1", "e": "Traumatología", "o": "Evaluación por Neurocirugía según indicación"}, {"t": "Fractura vertebral dorsal", "s": "fractura dorsal, fractura toracica", "c": "S22.0", "e": "Traumatología", "o": "Politrauma, TEC, tórax o abdomen asociado: Cirugía General y Trauma"}, {"t": "Fractura vertebral lumbar", "s": "fractura lumbar, fractura por estallido", "c": "S32.0", "e": "Traumatología", "o": "Politrauma, TEC, tórax o abdomen asociado: Cirugía General y Trauma"}, {"t": "Traumatismo vertebromedular (TVM)", "s": "tvm, traumatismo vertebro medular, lesion medular", "c": "T09.3", "e": "Traumatología", "o": "Politrauma, TEC, tórax o abdomen asociado: Cirugía General y Trauma"}, {"t": "Síndrome de cola de caballo", "s": "cola de caballo", "c": "G83.4", "e": "Traumatología", "o": "Por tumor o metástasis: Polivalente"}, {"t": "Compresión medular", "s": "compresion medular", "c": "G95.2", "e": "Traumatología", "o": "Por tumor o metástasis: Polivalente"}, {"t": "Cervicalgia / latigazo cervical sin fractura", "s": "cervicalgia, latigazo, esguince cervical", "c": "S13.4", "e": "Traumatología", "o": ""}, {"t": "Lumbalgia aguda", "s": "lumbalgia, dorsalgia, contractura", "c": "M54.5", "e": "Traumatología", "o": ""}, {"t": "IAM / síndrome coronario agudo", "s": "iam, infarto agudo de miocardio, sca", "c": "I21.9", "e": "NO CORRESPONDE", "o": "No hay unidad coronaria"}, {"t": "Angina inestable", "s": "angina", "c": "I20.0", "e": "NO CORRESPONDE", "o": "No hay unidad coronaria"}, {"t": "Cirugía cardíaca / posoperatorio cardíaco", "s": "cardiocirugia, bypass coronario", "c": "", "e": "NO CORRESPONDE", "o": "No hay cardiocirugía"}, {"t": "ACV isquémico / código ictus", "s": "acv isquemico, ictus, infarto cerebral", "c": "I63.9", "e": "NO CORRESPONDE", "o": "Salvo maligno o cerebeloso con indicación descompresiva"}, {"t": "Aneurisma de aorta", "s": "aneurisma de aorta abdominal", "c": "I71.4", "e": "NO CORRESPONDE", "o": "Cirugía vascular compleja"}, {"t": "Disección aórtica", "s": "diseccion de aorta", "c": "I71.0", "e": "NO CORRESPONDE", "o": "Cirugía vascular compleja"}, {"t": "Isquemia arterial aguda de miembro", "s": "isquemia arterial, embolia arterial", "c": "I74.3", "e": "NO CORRESPONDE", "o": "Cirugía vascular / angiografía"}, {"t": "Pie diabético", "s": "pie diabetico", "c": "E14.5", "e": "NO CORRESPONDE", "o": "Programa de pie diabético"}, {"t": "AOC / gangrena isquémica", "s": "aoc, arteriopatia obstructiva", "c": "I70.2", "e": "NO CORRESPONDE", "o": "Cirugía vascular"}, {"t": "Quemaduras", "s": "quemado, gran quemado", "c": "T30.0", "e": "NO CORRESPONDE", "o": "Cirugía plástica y quemados"}, {"t": "Trauma ocular", "s": "herida corneal, cuerpo extrano ocular, estallido ocular", "c": "S05.9", "e": "NO CORRESPONDE", "o": "Sin oftalmología de urgencia, aunque haya otro trauma"}, {"t": "Embarazo ectópico", "s": "ectopico", "c": "O00.9", "e": "NO CORRESPONDE", "o": "Ginecología y Obstetricia"}, {"t": "Enfermedad inflamatoria pélvica", "s": "eip, epi", "c": "N73.9", "e": "NO CORRESPONDE", "o": "Ginecología y Obstetricia"}, {"t": "Recambio de gastrostomía", "s": "gastrostomia, peg", "c": "Z43.1", "e": "NO CORRESPONDE", "o": "No corresponde a la urgencia"}, {"t": "Colección para drenaje percutáneo guiado", "s": "drenaje percutaneo, cateter multiproposito, radiologia intervencionista", "c": "", "e": "NO CORRESPONDE", "o": "Excepto nefrostomía percutánea (Urología)"}, {"t": "Tumor de hipófisis para cirugía transesfenoidal", "s": "transesfenoidal, endonasal", "c": "D35.2", "e": "NO CORRESPONDE", "o": "No hay otorrinolaringología"}, {"t": "Escroto agudo", "s": "escroto agudo, dolor testicular agudo", "c": "N50.8", "e": "Urología", "o": "Requiere diagnóstico confirmado. Inestable (NEWS2 ≥ 5 o parámetro en 3): Polivalente"}, {"t": "Hematuria posprocedimiento urológico", "s": "hematuria post procedimiento, hematuria postquirurgica", "c": "R31", "e": "Urología", "o": "Inestable: Polivalente"}, {"t": "Hematuria en paciente oncológico", "s": "hematuria oncologica, tumor vesical con hematuria", "c": "R31", "e": "Urología", "o": "Inestable: Polivalente"}, {"t": "Complicación posoperatoria de Urología (operado en HEQI)", "s": "dolor de herida operatoria urologica, posoperado de urologia", "c": "T81.9", "e": "Urología", "o": "Usar la opción \"Posoperatorio\" del formulario"}, {"t": "Infección de sitio quirúrgico profunda / órgano-espacio (operado en HEQI)", "s": "isq profunda, isq organo espacio", "c": "T81.4", "e": "Cirugía General y Trauma", "o": "Operado fuera de HEQI: VALORACIÓN INDIVIDUAL"}, {"t": "Colección / absceso intraabdominal posoperatorio", "s": "coleccion intraabdominal, absceso intraabdominal, absceso abdominal", "c": "K65.0", "e": "Cirugía General y Trauma", "o": "Si requiere drenaje percutáneo: NO CORRESPONDE"}, {"t": "Trauma de bazo / hígado", "s": "lesion esplenica, trauma hepatico, laceracion hepatica", "c": "S36.0", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Herida de cráneo por arma de fuego", "s": "haf craneal, herida craneal por arma de fuego", "c": "S06.9", "e": "Cirugía General y Trauma", "o": ""}, {"t": "Quiste aracnoideo", "s": "quiste aracnoideo", "c": "G93.0", "e": "Polivalente", "o": ""}, {"t": "Cavernoma", "s": "cavernoma, angioma cavernoso", "c": "D18.0", "e": "Polivalente", "o": ""}, {"t": "Encefalocele", "s": "encefalocele", "c": "Q01.9", "e": "Polivalente", "o": ""}, {"t": "Médula anclada", "s": "medula anclada", "c": "Q06.8", "e": "Polivalente", "o": ""}, {"t": "Mielomeningocele", "s": "mielomeningocele", "c": "Q05.9", "e": "Polivalente", "o": ""}, {"t": "Absceso de psoas / paravertebral", "s": "absceso de psoas, absceso paravertebral", "c": "K68.1", "e": "Polivalente", "o": ""}, {"t": "Fractura de rótula", "s": "fractura de rotula", "c": "S82.0", "e": "Traumatología", "o": ""}, {"t": "Fractura de escápula", "s": "fractura de escapula, omoplato", "c": "S42.1", "e": "Traumatología", "o": ""}, {"t": "Lesión ligamentaria / meniscal de rodilla", "s": "lesion de menisco, rotura de ligamento cruzado", "c": "S83.2", "e": "Traumatología", "o": ""}, {"t": "Rotura del tendón de Aquiles", "s": "tendon de aquiles", "c": "S86.0", "e": "Traumatología", "o": ""}, {"t": "Complicación de material de osteosíntesis", "s": "osteosintesis, retiro de material", "c": "T84.1", "e": "Traumatología", "o": ""}, {"t": "Lesión de vía biliar (hepático común / colédoco)", "s": "lesion de via biliar, lesion del hepatico comun, fistula biliar, bilioma, coleperitoneo", "c": "K83.8", "e": "Cirugía General y Trauma", "o": "Corresponde (hepatobiliar). Si es lesión vascular hepática: NO CORRESPONDE"}, {"t": "Cáncer de colon / recto con indicación quirúrgica", "s": "cancer de colon, cancer de recto, tumor de colon, adenocarcinoma de colon, colostomia", "c": "C18.9", "e": "Cirugía General y Trauma", "o": "Paciente paliativo: VALORACIÓN INDIVIDUAL"}, {"t": "Cáncer gástrico / pancreático con indicación quirúrgica", "s": "cancer gastrico, tumor de pancreas, cancer de pancreas", "c": "C16.9", "e": "Cirugía General y Trauma", "o": "Paciente paliativo: VALORACIÓN INDIVIDUAL"}, {"t": "Metástasis hepática", "s": "mts hepatica", "c": "C78.7", "e": "Cirugía General y Trauma", "o": "Paciente paliativo: VALORACIÓN INDIVIDUAL"}, {"t": "Lesión vascular hepática (arteria hepática / vena porta)", "s": "lesion de arteria hepatica, trombosis portal", "c": "", "e": "NO CORRESPONDE", "o": "Requiere cirugía vascular / hemodinamia"}, {"t": "Cuerpo extraño en esófago / impactación alimentaria", "s": "cuerpo extrano en esofago, bolo alimentario, impactacion esofagica", "c": "T18.1", "e": "NO CORRESPONDE", "o": "Requiere endoscopia de urgencia"}];
 const SINON=[[/\bfx\b/g,'fractura'],[/\bfxs\b/g,'fracturas'],[/apendisitis|apendicits|apendisits/g,'apendicitis'],[/colesistitis|colecistits/g,'colecistitis'],
   [/\bitu\b|\bivu\b/g,'infeccion urinaria'],[/\brao\b/g,'retencion aguda de orina'],[/\bhbp\b/g,'hiperplasia prostatica'],
   [/\bacv\b/g,'acv'],[/\btvm\b/g,'traumatismo vertebro medular'],[/\bpolitrauma\w*/g,'politrauma'],[/\bherida de arma blanca|\bhab\b/g,'arma blanca'],[/\bhaf\b|\bpaf\b/g,'arma de fuego'],
-  [/neumotorax|neumotorax/g,'neumotorax'],[/\bsx\b/g,'sindrome'],[/\bobst\w* intestinal/g,'obstruccion intestinal']];
+  [/neumotorax|neumotorax/g,'neumotorax'],[/\bsx\b/g,'sindrome'],[/\bhnp\b/g,'hernia discal'],[/\bupp\b/g,'ulcera por presion'],[/\bmts\b/g,'metastasis'],[/\bhsd\b/g,'hematoma subdural'],[/\bobst\w* intestinal/g,'obstruccion intestinal']];
 // Normaliza el texto y elimina lo negado ("sin…", "se descarta…", "negativo para…"); "a descartar X" se considera sospecha y se mantiene
+// ===== Corrección de errores de tipeo (compara cada palabra con el vocabulario clínico de las reglas) =====
+let VOCAB=null, CORRECCIONES=[]; const _cacheTipeo={};
+const PALABRAS_COMUNES=new Set('paciente pacientes refiere presenta derecho derecha izquierdo izquierda horas semana semanas evolucion cuadro clinico actual ingreso consulta control servicio hospital derivado derivacion urgencia urgente estable inestable normal cuenta tratamiento medicacion antecedentes ninguno ninguna previa previo cirugia general region marcha dolor fiebre aproximadamente tiempo despues durante ademas solicita solicito indicacion evaluacion internacion impotencia funcional postracion parestesia irradia dificulta empeora ultimos masculino masculina femenino femenina lucido lucida orientado orientada afebril estables traslado trasladado trasladar traslada derivar deriva derivo diagnostico diagnosticado internado internada indicacion indicado coloproctologia proctologia oncologia oncologico oncologica manejo multidisciplinario posterior anterior inferior superior miembro regional sanitaria unidad familiar familiares llevando quirurgico quirurgica postquirurgico procedimiento'.split(' '));
+function construirVocab(){
+  VOCAB=new Map();
+  const fuentes=REGLAS.map(r=>r[0].source).concat(FUERA.map(f=>f[0] instanceof RegExp?f[0].source:''));
+  fuentes.forEach(src=>{ const re=/([a-z]{6,})(\\w[*+])?/g; let m; while((m=re.exec(src))){ const w=m[1], stem=!!m[2]; if(!VOCAB.has(w)||stem) VOCAB.set(w,stem||VOCAB.get(w)||false); } });
+}
+function distDL(a,b,max){
+  if(Math.abs(a.length-b.length)>max) return max+1;
+  const d=[]; for(let i=0;i<=a.length;i++){ d[i]=[i]; } for(let j=0;j<=b.length;j++) d[0][j]=j;
+  for(let i=1;i<=a.length;i++){ let minFila=99; for(let j=1;j<=b.length;j++){ const c=a[i-1]===b[j-1]?0:1;
+    d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+c);
+    if(i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1]) d[i][j]=Math.min(d[i][j],d[i-2][j-2]+1);
+    minFila=Math.min(minFila,d[i][j]); } if(minFila>max) return max+1; }
+  return d[a.length][b.length];
+}
+function corregirPalabra(w){
+  if(w.length<6||PALABRAS_COMUNES.has(w)) return w;
+  if(w in _cacheTipeo) return _cacheTipeo[w];
+  if(!VOCAB) construirVocab();
+  let res=w;
+  if(!VOCAB.has(w) && ![...VOCAB.keys()].some(v=>w.startsWith(v))){
+    const max=w.length>=8?2:1; let mejor=null, dmin=max+1, empate=false;
+    for(const [v,stem] of VOCAB){
+      let dd=distDL(w,v,max);
+      if(stem&&w.length>v.length){ const dp=Math.min(distDL(w.slice(0,v.length),v,max),distDL(w.slice(0,v.length+1),v,max)); if(dp<dd) dd=dp+0.5; }
+      if(dd<dmin){ dmin=dd; mejor=v; empate=false; } else if(dd===dmin&&mejor&&v!==mejor&&!v.startsWith(mejor)&&!mejor.startsWith(v)) empate=true;
+    }
+    if(mejor&&dmin<=max&&!empate){ res=VOCAB.get(mejor)&&w.length>mejor.length ? mejor+w.slice(mejor.length) : mejor; }
+  }
+  return (_cacheTipeo[w]=res);
+}
+function corregirTipeo(t){
+  return t.replace(/[a-z]{6,}/g,w=>{ const c=corregirPalabra(w); if(c!==w&&!CORRECCIONES.some(x=>x[0]===w)) CORRECCIONES.push([w,c]); return c; });
+}
 function dxNorm(t){
   t=String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   SINON.forEach(([re,r])=>{ t=t.replace(re,r); });
+  t=corregirTipeo(t);
+  t=t.replace(/\b(no traumatic[oa]s?|atraumatic[oa]s?)\b/g,'espontaneo');
   return t.replace(/\b(se descart\w*|descart(a|an|o|aron|ado|ada|ados|adas)|sin evidencia de|sin signos de|sin|no presenta|no se (observa|evidencia|constata)|niega|negativ[oa] para|se excluye\w*|excluid[oa])\b(\s+[^\s,.;]+){1,3}/g,' ');
 }
 function esPediatrico(){
@@ -684,10 +734,36 @@ const REGLAS=[
   // Amputación traumática / lesión traumática grave de miembros (la amputación por pie diabético o AOC se excluye antes, en FUERA)
   [/amputa|desarticula|avulsion|arrancamiento|aplastamiento|machacamiento|mutilacion|lesion por (amoladora|moladora|sierra|motosierra|maquina|prensa)|herida (por|con) (amoladora|moladora|sierra|motosierra|maquina|prensa)|seccion (traumatica )?(de|del) (dedo|dedos|mano|pie|miembro|brazo|antebrazo|pierna|tendon)/,
     ()=> /politrauma|poli trauma|accidente de transito|siniestro vial|trauma\w* (abdominal|de abdomen|toracico|de torax|craneo|encefalico)|\btec\b|\btce\b/.test(textoDx()) ? [CG,'Amputación / lesión traumática de miembro en paciente politraumatizado'] : [TR,'Amputación / lesión traumática de miembro']],
+  // Columna: cervical con lesión -> Polivalente (Neurocirugía); no traumática quirúrgica -> Polivalente; trauma dorsolumbar y lo simple -> Traumatología. Politrauma sigue a Cirugía.
+  [/fractura de (jefferson|odontoides|atlas|axis)|fractura del ahorcado|(luxacion|subluxacion|inestabilidad) (atlanto\w*|facetari\w*)|atlantoaxoide\w*|atlanto ?occipital|mielopatia cervical|cuadripleji\w*|cuadripares\w*|tetrapleji\w*|tetrapares\w*|sindrome centromedular|brown.?sequard|(fractura|luxacion|subluxacion|lesion (medular|ligamentaria)|inestabilidad|listesis|hernia\w*|compresion medular|mielopatia|traumatismo vertebro ?medular|hematoma epidural|absceso epidural)[^.;|]{0,40}(cervical\w*|odontoides|atlas|axis|\bc[1-7]\b)|(cervical\w*|odontoides|\bc[1-7]\b)[^.;|]{0,25}(fractura|luxacion|lesion medular|deficit|mielopatia|hernia)/,
+    ()=> /politrauma|\btec\b|\btce\b|traumatismo (de )?craneo|craneoencefal|trauma\w* (toracico|de torax|abdominal)/.test(textoDx()) ? null : /fractura|luxacion|subluxacion|traumat|lesion medular|lesion ligamentaria|jefferson|ahorcado|caida|accidente|golpe|agresion|latigazo|choque|zambullida|clavado/.test(textoDx()) ? [TR,'Trauma de columna cervical (Traumatología; evaluación por Neurocirugía según indicación)'] : [PV,'Patología cervical no traumática con posible indicación neuroquirúrgica (evaluación por Neurocirugía)']],
+  [/cervicalgia|latigazo|esguince cervical|contractura cervical|trauma\w* cervical|trauma de columna cervical/, ()=>[TR,'Cervicalgia / trauma cervical simple (sin fractura ni déficit)']],
+  [/cola de caballo|compresion medular|sindrome compresivo medular/, ()=> /politrauma|\btec\b|\btce\b|traumatismo (de )?craneo|craneoencefal|trauma\w* (toracico|de torax|abdominal)/.test(textoDx()) ? null : /metastasis|tumor|neoplasia|ependimoma|mieloma/.test(textoDx()) ? [PV,'Compresión medular tumoral (cartera de Neurocirugía): evaluación por Neurocirugía'] : [TR,'Síndrome de compresión medular / cola de caballo']],
+  [/tumor (medular|intramedular|extramedular|vertebral|espinal|de columna)|metastasis (vertebral\w*|espinal|en columna|de columna)|ependimoma|mieloma|plasmocitoma|fractura patologica (vertebral|de columna)|hematoma (epidural|subdural) (espinal|espontaneo|medular)|absceso epidural|empiema (epidural|subdural espinal)|discitis|osteomielitis vertebral|mal de pott|absceso paravertebral|hernia\w* discal|protrusion discal|extrusion discal|discopatia|radiculop\w*|mielopatia|estenosis (de canal|del canal|lumbar|espinal|de conducto|cervical)|listesis|espondilolistesis|inestabilidad vertebral|siringomielia|chiari|medula anclada|quiste (aracnoideo|de tarlov)|fistula (de )?lcr|escoliosis|cifoescoliosis|artrodesis|laminectomia|discectomia|retiro de (protesis|material) de columna|aflojamiento de tornillos/,
+    ()=> /politrauma|\btec\b|\btce\b|traumatismo (de )?craneo|craneoencefal|trauma\w* (toracico|de torax|abdominal)/.test(textoDx()) ? null : [PV,'Patología de columna (cartera de Neurocirugía): evaluación por Neurocirugía']],
+  [/lesion medular|traumatismo vertebro ?medular|fractura (vertebral|de columna|dorsal|lumbar|toracolumbar|de vertebra)|estallido vertebral|fractura por estallido|fractura de chance|fractura.?luxacion (dorsal|lumbar|toracolumbar)/,
+    ()=> /politrauma|\btec\b|\btce\b|traumatismo (de )?craneo|craneoencefal|trauma\w* (toracico|de torax|abdominal)/.test(textoDx()) ? null : [TR,'Trauma de columna dorsolumbar']],
+  // Hígado y vía biliar: lesión vascular no corresponde; lesión de vía biliar sí corresponde
+  [/lesion vascular hepatica|lesion (de (la )?)?(arteria hepatica|vena porta)|trombosis (portal|de (la )?vena porta)|pseudoaneurisma hepatico/, ()=>[NC,'Lesión vascular hepática: requiere cirugía vascular / hemodinamia']],
+  [/lesion (de (la )?)?via biliar|via biliar principal|lesion (del )?(conducto )?(hepatico comun|coledoco)|hepatico comun|lesion biliar|fistula biliar|bilioma|coleperitoneo|biliperitoneo/, ()=>[CG,'Lesión de vía biliar (Cirugía General - hepatobiliar)']],
+  // Oncología quirúrgica digestiva: Cirugía General
+  [/cancer (de |del )?(colon|recto|ciego|colorrectal|sigma|estomago|gastrico|pancreas|higado|hepatico)|adenocarcinoma (de |del )?(colon|recto|ciego|estomago|pancreas)|(tumor|neoplasia|masa) (de |del )?(colon|recto|ciego|sigma|estomago|gastric\w*|pancreas|pancreatic\w*)|metastasis hepatica|colostomia|ileostomia|obstruccion tumoral/, ()=>[CG,'Patología oncológica digestiva con indicación quirúrgica']],
+  // Neurocirugía craneal (cartera): entra por Polivalente
+  [/(acv|ictus|infarto cerebral|stroke|evento cerebrovascular) isquemico[^.;|]{0,50}(maligno|descompresiv\w*|craniectomia|hemicraniectomia)|infarto (cerebral )?maligno|infarto maligno de (la )?(arteria )?cerebral media|infarto cerebeloso|hemicraniectomia|craniectomia descompresiva/, ()=>[PV,'ACV isquémico maligno / infarto cerebeloso con indicación de craniectomía descompresiva (Neurocirugía)']],
+  [/codigo ictus|(acv|ictus|stroke|evento cerebrovascular) isquemico|infarto cerebral|trombolisis/, ()=>[NC,'ACV isquémico / código ictus: no corresponde (solo isquémico maligno o infarto cerebeloso con indicación de craniectomía descompresiva)']],
+  [/disfuncion (valvular|de (la )?valvula|del sistema de derivacion)|valvula (de derivacion|ventriculo ?peritoneal|de dvp)|\bdvp\b|ventriculitis|malformacion arterio ?venosa|\bmav\b|aneurisma\w* (cerebral|intracraneal|intracraneano)|clipado|cavernoma|hematoma de fosa posterior|neuralgia del trigemino|biopsia estereotax\w*|estereotaxi\w*|biopsia (cerebral|profunda|de lesion cerebral)|cateter de pic|neurocirug\w*|neuroquirurg\w*|\bneurocx\b/, ()=> /traumat|\btce\b|\btec\b|politrauma|accidente|caida|golpe|agresion/.test(textoDx()) ? null : [PV,'Patología de la cartera de Neurocirugía: evaluación por Neurocirugía']],
+  [/glioblastoma|astrocitoma|oligodendroglioma|meduloblastoma|craneofaringioma|tumor (de |del )?(hipofisis|selar|hipofisario|frontal|temporal|parietal|occipital|fronto ?temporal|de fosa posterior|intraventricular|de calota|orbital|del angulo|pontocerebeloso|de clivus)|adenoma hipofisario|macroadenoma|lesion ocupante|\bloe\b|mielomeningocele|encefalocele|hemorragia subaracnoidea|\bhsa\b/,
+    ()=> /traumat|\btce\b|\btec\b|politrauma|accidente|caida|golpe|agresion/.test(textoDx()) ? null : [PV,'Patología de la cartera de Neurocirugía: evaluación por Neurocirugía']],
+  [/eventracion|hemorroid\w*|fisura anal|prolapso rectal|fistula (perianal|anal)/, ()=>[CG,'Patología de pared abdominal / proctológica']],
+  [/ulcera (peptica |gastrica |duodenal )?perforada|isquemia (mesenterica|intestinal)|hernia (crural|femoral)\w*/, ()=>[CG,'Abdomen agudo quirúrgico (perforación / isquemia / hernia complicada)']],
+  [/mastitis|absceso (de )?mama|absceso mamario|absceso retroareolar/, ()=>[PV,'Mastitis / absceso mamario (drenaje)']],
+  [/(herida|posoperado|posoperatorio|complicacion)[^.;|]{0,30}urolog\w*|dolor testicular|escroto agudo/, ()=>urEst('Patología urológica (posoperatorio / escroto agudo)')],
+  [/nefrostomia/, ()=>urEst('Uropatía obstructiva con indicación de nefrostomía percutánea (Urología)')],
   // Trauma: todo trauma no ortopédico va a Cirugía General y Trauma
   [/\btec\b|\btce\b|traumatismo (de )?craneo|traumatismo craneo\w*|trauma (de )?craneo|fractura de craneo|hundimiento de craneo|hematoma (epidural|extradural)|hematoma subdural agudo|contusion (cerebral|hemorragica)|lesion axonal|hemorragia subaracnoidea traumatica/, ()=>[CG,'Traumatismo craneoencefálico']],
   [/(hematoma|hemorragia) (subdural|intraparenquimatos\w*|intracerebral|subaracnoidea)/, ()=> /traumat|caida|golpe|accidente|agresion/.test(textoDx()) ? [CG,'Traumatismo craneoencefálico'] : null],
-  [/fractura (de )?(mandibula|mandibular|maxilar|malar|cigomatic\w*|nasal|huesos propios|orbita|orbitaria|le fort)|trauma\w* (facial|maxilofacial|de cara|cervical|de cuello)|herida (facial|de cara|de cuello|cervical)/, ()=>[CG,'Trauma maxilofacial / cervical']],
+  [/fractura (de )?(mandibula|mandibular|maxilar|malar|cigomatic\w*|nasal|huesos propios|orbita|orbitaria|le fort)|trauma\w* (facial|maxilofacial|de cara)|herida (facial|de cara)/, ()=>[CG,'Trauma maxilofacial: evaluación multidisciplinaria en contexto de trauma (Cirugía / Traumatología / Maxilofacial)']],
+  [/trauma\w* (cervical|de cuello)|herida (de cuello|cervical)/, ()=>[CG,'Trauma / herida de cuello']],
   [/trauma\w* (toracico|de torax)|contusion (toracica|pulmonar)|fracturas? (costal\w*|de costilla\w*|de esternon)|torax inestable|volet/, ()=>[CG,'Trauma de tórax']],
   [/absceso (perianal|isquiorrectal|perirrectal|anorrectal|pilonidal)|fistula perianal|quiste pilonidal/, ()=>[CG,'Absceso perianal / anorrectal']],
   // Polivalente: cirugía torácica (incluye empiema pleural) y especialidades no resolutivas de la cartera quirúrgica propia.
@@ -713,7 +789,7 @@ const REGLAS=[
   // Cirugía General y Trauma
   [/politrauma|poli trauma|accidente de transito|siniestro vial|arma blanca|arma de fuego|herida (penetrante|por arma)|trauma\w* (abdominal|de abdomen)/, ()=>[CG,'Paciente politraumatizado / trauma abdominal']],
   [/hemorragia digestiva baja|sangrado digestivo bajo|\bhdb\b|rectorragia|hematoquecia|proctorragia|sangrado (rectal|anal)/, ()=>[CG,'Hemorragia digestiva baja']],
-  [/hemorragia digestiva alta|sangrado digestivo alto|\bhda\b|hematemesis|melena|varices esofagic\w*|ulcera peptica sangrante/, ()=>[NC,'Hemorragia digestiva alta: requiere endoscopia (HEQI no cuenta)']],
+  [/hemorragia digestiva alta|sangrado digestivo alto|\bhda\b|hematemesis|melena|varices esofagic\w*|ulcera peptica sangrante/, ()=>[NC,'Hemorragia digestiva alta: requiere endoscopia de urgencia (HEQI no cuenta)']],
   [/hemorragia digestiva|sangrado digestivo/, ()=>[NC,'Hemorragia digestiva sin especificar: indique si es ALTA (no corresponde) o BAJA (Cirugía General y Trauma)']],
   [/sindrome oclusivo|cuadro oclusivo|oclusivo|\bileo\b|oclusion intestinal|obstruccion intestinal|suboclusion|bridas|hernia (estrangulada|atascada|incarcerada|complicada|inguinal|umbilical|incisional)|volvulo/, ()=>[CG,'Patología abdominal quirúrgica / oclusión intestinal o hernia']],
   [/litiasis vesicular|colelitiasis|calculos? (en la )?vesicula|calculo vesicular|litiasis biliar|coledocolitiasis|coledocolitiasis|colecistolitiasis|colecistitis|colangitis|ictericia obstructiva|colestasis/, ()=>[CG,'Patología biliar / litiasis vesicular, colecistitis o coledocolitiasis']],
@@ -721,18 +797,44 @@ const REGLAS=[
   [/embarazo ectopico|ectopico|\beip\b|\bepi\b|enfermedad inflamatoria pelvica/, ()=>[NC,'EIP / embarazo ectópico: corresponde a Ginecología y Obstetricia']],
   [/infeccion (de|del) sitio quirurgico|\bisq\b|infeccion de (la )?herida (operatoria|quirurgica)|dehiscencia|evisceracion|abdomen abierto|laparostomia|bolsa de bogota/, ()=>[CG,'Complicación de herida / ISQ / abdomen abierto (en seguimiento por HEQI)']],
   [/abdomen agudo|apendicitis|apendicular|colecistitis|diverticulitis|peritonitis|perforacion|viscera hueca|dolor abdominal|plastron/, ()=>[CG,'Dolor abdominal agudo quirúrgico']],
+  // Sinónimos frecuentes (lista desplegable de diagnósticos)
+  [/\bfid\b|cpre (programada|electiva)|fosa iliaca derecha|calculos? (en (la )?)?vesicula|necrosis pancreatica|pseudoquiste|neumoperitoneo|adherencias|fascitis de pared|absceso anal|pilonidal|ulcera sangrante|fractura craneal|hundimiento (de )?crane\w*|coleccion intraabdominal|absceso (intra ?)?abdominal|lesion esplenica|laceracion (hepatica|esplenica)|trauma\w* (de )?(bazo|higado|hepatico|esplenico)/, ()=>[CG,'Patología quirúrgica abdominal / trauma de cráneo']],
+  [/hiperplasia (de )?prostat\w*/, ()=>urEst('Hiperplasia prostática complicada')],
+  [/contusion renal|trauma\w* renal/, ()=>urEst('Trauma renal aislado')],
+  [/colles|supracondil\w*|calcaneo|acetabul\w*|compartimental|odontoides|facetari\w*|contractura|omoplato|escapula|retiro de material/, ()=>[TR,'Patología traumatológica']],
+  [/absceso (de |del )?cuello|absceso cervical|fascitis (cervical|de cuello)|\bfascitis\b(?! plantar)|hematoma subdural cronico|metastasis (cerebral|vertebral)|\bvalvula\b|derivacion ventriculo ?peritoneal|hematoma (de )?(fosa posterior|cerebeloso)|fistula de liquido cefalorraquideo|neuralgia (del )?trigemino|conducto estrecho|infeccion de columna|\bpott\b|tbc vertebral|tuberculosis vertebral|derrame paraneumonico|sepsis urinaria|absceso (faringeo|subperiostico)|masa (cerebral|intracraneal)|absceso (de |del )?psoas|absceso paravertebral/, ()=>[PV,'Patología de resorte quirúrgico (Polivalente)']],
+  [/\b[lct]\d{1,2} ?-? ?[lcts]\d{1,2}\b/, ()=> /fractura|luxacion|traumat|caida|accidente|golpe/.test(textoDx()) ? null : [PV,'Patología discal / de columna (cartera de Neurocirugía)']],
   // Traumatología
   [/fractura|fractura patologica|fractura por fragilidad|luxacion|sindrome compartimental|protesis|tendon|tendin|ligament|menisco|rotura de ligamento|lesion de rodilla|lesion osteocondral|condropatia|artrosis|osteoartrosis|artritis degenerativa|osteonecrosis|necrosis avascular|osteocondritis|osteocondroma|encondroma|quiste oseo|tumor oseo|lesion osea|lesion litica osea|lesion blastica osea|displasia fibrosa|enfermedad de paget|deformidad osea|pseudoartrosis|retardo de consolidacion|consolidacion viciosa|no consolidacion|herida (compleja|de mano|de miembro|cortante)|lumbalgia|lumbociatalgia|cervicalgia|dorsalgia|dolor de columna|vertebro ?medular|raquimedular|lesion medular|compresion medular|cola de caballo|hernia de disco|esguince|osteosintesis|material de osteosintesis/, ()=>[TR,'Patología traumatológica, ósea u osteoarticular (excluye osteoporosis aislada)']],
-  [/(contusion|traumatismo|trauma|esguince|herida|lesion|golpe)\w* (de |en )?(la |el |los |las )?(rodilla|tobillo|pie|pies|mano|manos|muneca|codo|hombro|brazo|antebrazo|pierna|muslo|cadera|pelvis|dedo|dedos|columna|miembro\w*|extremidad\w*)/, ()=>[TR,'Trauma de miembros / columna']],
+  [/(contusion|traumatismo|trauma|esguince|herida|lesion|golpe|deformidad|torcedura|aplastamiento|machucon)\w* (de |en )?(la |el |los |las )?(rodilla|tobillo|pie|pies|mano|manos|muneca|codo|hombro|brazo|antebrazo|pierna|muslo|cadera|pelvis|dedo|dedos|columna|miembro\w*|extremidad\w*)/, ()=>[TR,'Trauma de miembros / columna']],
   [/traumat|trauma\b|politrauma|contusion|herida|agresion|caida|accidente/, ()=>[CG,'Trauma (Cirugía General y Trauma)']]
 ];
 let espManual=false;
 function textoDx(){ return dxNorm($('motivo').value+' || '+$('dato').value); }
 function cartera(){
-  const c=carteraBase(); if(!c) return c;
+  // Pediatría: solo trauma aislado de miembros, estable, entra por Traumatología; el resto no corresponde
+  if(esPediatrico()){
+    const b=carteraBase(true), tx=textoDx();
+    const miembro=/fractura|fisura|luxacion|subluxacion|esguince|contusion|trauma|amputacion|herida|lesion|golpe|caida|deformidad|aplastamiento|machucon|torcedura|traumatismo/.test(tx)
+      && /brazo|antebrazo|codo|hombro|clavicula|humero|radio|cubito|muneca|mano|dedo|falange|metacarp|femur|rodilla|tibia|perone|tobillo|\bpie\b|pierna|muslo|cadera|rotula|calcaneo|metatars|supracondil|miembro|extremidad/.test(tx)
+      && !/politrauma|\btec\b|\btce\b|craneo|torax|abdom|columna|vertebr|cervical|cuello|cara|facial/.test(tx);
+    if(b && b.servicio===TR && miembro && !inestable()) return Object.assign({},b,{criterio:b.criterio+' - paciente pediátrico estable con trauma aislado de miembros'});
+    const craneoCara=/\btec\b|\btce\b|traumatismo (de )?craneo|craneo ?encefal\w*|trauma\w* (de )?craneo|trauma\w* (facial|maxilofacial|de cara)|herida\w* (facial|de cara|en (la )?cara|frontal|frontoparietal|de cuero cabelludo|del labio|nasal)|fractura (nasal|de mandibula|mandibular|malar|de huesos propios)/.test(tx)
+      && !/politrauma|torax|abdom|columna|vertebr|fractura (de |del )?(femur|cadera|pelvis|tibia|humero)/.test(tx);
+    if(b && b.servicio===CG && craneoCara && !inestable()) return Object.assign({},b,{criterio:'Traumatismo craneoencefálico / maxilofacial - paciente pediátrico estable'});
+    return {servicio:NC, criterio:'Paciente pediátrico (menor de 18 años): corresponde a un centro con atención pediátrica (solo se recibe, estable, trauma aislado de miembros por Traumatología o TEC / trauma maxilofacial por Cirugía General y Trauma)'};
+  }
+  const c0=carteraBase(); if(!c0) return c0;
+  let c=c0;
+  // Posoperado externo descrito en el texto (aunque no se marque la opción): valoración individual
+  if(c.servicio!==NC && !c.valoracion && radio('posoperatorio')!=='Sí' && /post ?operad\w*|posoperatori\w*|post ?quirurgic\w*|cirugia previa|operado (en|por)/.test(textoDx())
+     && /otro (centro|hospital|servicio|sanatorio)|extern\w*|fuera de (heqi|ingavi)|privad\w*|sanatorio|clinica|hospital (regional|central|distrital|de clinicas)|regional/.test(textoDx()))
+    c=Object.assign({},c,{valoracion:true, criterio:c.criterio+' - posoperado de otro centro: valoración individual del caso'});
+  if(c.servicio!==NC && /paliativ\w*|cuidados paliativos|fuera de alcance terapeutico|enfermedad terminal|terminal|irresecable|soporte paliativo/.test(textoDx()))
+    c=Object.assign({},c,{valoracion:true, criterio:c.criterio+' - paciente oncológico en tratamiento paliativo: valoración individual del caso'});
   // Urología solo recibe con diagnóstico confirmado
   if(c.servicio===UR && c.deTexto && SOSPECHA.test(textoDx()))
-    return {servicio:NC, criterio:'Urología requiere diagnóstico confirmado (imagen o laboratorio). Confirmar el diagnóstico antes de derivar', detectado:c.detectado};
+    return {servicio:NC, criterio:'Urología requiere diagnóstico confirmado (imagen o laboratorio). Confirmar el diagnóstico antes de derivar', detectado:c.detectado, requiereConf:true};
   // Pluripatológico: estable entra por la especialidad quirúrgica; inestable por Polivalente
   // Pluripatológico: Urología inestable -> Polivalente; Cirugía y Traumatología solo alto riesgo (NEWS2 >= 7) -> Polivalente o REA
   if(c.servicio===UR && pluri() && inestable())
@@ -741,23 +843,23 @@ function cartera(){
     return Object.assign({},c,{alerta:'REQUIERE EVALUACIÓN MULTIDISCIPLINARIA INTEGRAL: paciente pluripatológico con NEWS2 ≥ 7 o 3 en un solo parámetro'});
   return c;
 }
-function carteraBase(){
-  if(esPediatrico()) return {servicio:NC, criterio:'Paciente pediátrico (menor de 18 años): corresponde a un centro con atención pediátrica'};
+function carteraBase(ignorarEdad){
+  if(!ignorarEdad && esPediatrico()) return {servicio:NC, criterio:'Paciente pediátrico (menor de 18 años): corresponde a un centro con atención pediátrica'};
   const tx=textoDx();
   if(/absceso (perianal|isquiorrectal|perirrectal|anorrectal|pilonidal)|fistula perianal|quiste pilonidal/.test(tx)&&!fueraDeCartera().length) return {servicio:CG, criterio:'Absceso perianal / anorrectal'};
   if(radio('lesionDrenaje')==='Sí') return {servicio:PV, criterio:'Lesión de piel y partes blandas con imagen que indica necesidad de drenaje o desbridamiento'};
   const f=fueraDeCartera(); if(f.length) return {servicio:NC, criterio:'HEQI no cuenta con '+f.join(' ni ')};
   if(/protesis|artroplastia|reemplazo (articular|de cadera|de rodilla)|aflojamiento protesico/.test(tx))
-    return radio('opHeqi')==='No' ? {servicio:NC, criterio:'Complicación de prótesis articular operada fuera de HEQI: corresponde al centro que la realizó'}
+    return radio('opHeqi')==='No' ? {servicio:PV, valoracion:true, criterio:'Complicación de prótesis articular operada fuera de HEQI: valoración individual del caso por el equipo'}
       : {servicio:PV, criterio:'Complicación de prótesis articular operada en HEQI'+(radio('opHeqi')==='Sí'?'':' (verificar que haya sido operado en HEQI)')};
-  if(radio('posoperatorio')==='Sí' && radio('opHeqi')==='No') return {servicio:NC, criterio:'Complicación posoperatoria de cirugía realizada fuera de HEQI: corresponde al centro que la realizó'};
+  if(radio('posoperatorio')==='Sí' && radio('opHeqi')==='No'){ const sv=({ 'Urología':UR, 'Traumatología':TR, 'Cirugía General y Trauma':CG })[$('especialidadQx').value]||PV; return {servicio:sv, valoracion:true, criterio:'Posoperatorio de cirugía realizada fuera de HEQI: valoración individual del caso por el equipo de '+sv}; }
   if(radio('posoperatorio')==='Sí'){
     const dias=calcularDiasPosop(), esp=$('especialidadQx').value, complicacion=radio('complicacionQx')==='Sí';
     const servicio=({ 'Urología':UR, 'Traumatología':TR, 'Cirugía General y Trauma':CG })[esp];
     if(complicacion || (dias!==null && dias<=15)){ const destino=servicio||PV; return {servicio:destino, criterio:(complicacion?'Complicación confirmada relacionada con cirugía previa':'Posoperatorio inmediato/temprano (hasta 15 días)')+' — '+esp+'; '+(dias===null?'antigüedad no calculada':dias+' día(s) desde la cirugía')+(servicio?'':' — derivación a Polivalente por cirugía de otra especialidad')}; }
   }
   const partes=[$('motivo').value,$('dato').value].map(dxNorm);
-  for(const t of partes){ if(!t.trim())continue; for(const [re,fn] of REGLAS){ if(re.test(t)){ const r=fn(); if(!r) continue; const [servicio,criterio]=r; const m=t.match(re); return {servicio,criterio,detectado:m?m[0]:'',deTexto:true}; } } }
+  for(const t of partes){ if(!t.trim())continue; for(const [re,fn] of REGLAS){ if(re.test(t)){ const r=fn(); if(!r) continue; const [servicio,criterio,vi]=r; const m=t.match(re); return {servicio,criterio,valoracion:!!vi,detectado:m?m[0]:'',deTexto:true}; } } }
   if(partes.some(t=>t.trim())) return {servicio:NC, criterio:'El diagnóstico escrito no se reconoce en la Cartera de Servicios de HEQI. Revise la redacción (use el diagnóstico clínico habitual) o fundamente el pedido en Observación', noReconocido:true};
   return null;
 }
@@ -795,20 +897,76 @@ document.querySelectorAll('input[name=situacion]').forEach(r=>r.addEventListener
 }));
 document.querySelectorAll('input[name=complicacionQx]').forEach(el=>el.addEventListener('change',actualizarPosop));
 
+// ===== Lista desplegable de diagnósticos (desde 2 letras) =====
+let dxElegido=null, sugIdx=-1, sugItems=[];
+const nrm=x=>String(x||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+LISTA_DX.forEach(d=>{ d._t=nrm(d.t); d._s=nrm(d.s); d._w=(d._t+' '+d._s).split(/[^a-z0-9]+/).filter(Boolean); });
+function buscarDx(q){
+  q=nrm(q).trim(); if(q.length<2) return [];
+  const pal=q.split(/\s+/);
+  const r=[];
+  LISTA_DX.forEach(d=>{
+    if(!pal.every(p=>d._w.some(w=>w.startsWith(p)))) return;
+    let p=4;
+    if(d._t.startsWith(q)) p=0; else if(d._t.split(/[\s/(]+/).some(w=>w.startsWith(pal[0]))) p=1;
+    else if(d._s.split(/,\s*/).some(w=>w.startsWith(q))) p=2; else if(d._t.includes(q)) p=3;
+    r.push([p,d]);
+  });
+  return r.sort((a,b)=>a[0]-b[0]||a[1].t.length-b[1].t.length).slice(0,8).map(x=>x[1]);
+}
+function cerrarSug(){ $('sugerencias').hidden=true; sugIdx=-1; }
+function pintarSug(){
+  const ul=$('sugerencias');
+  if(!sugItems.length){ cerrarSug(); return; }
+  ul.innerHTML=sugItems.map((d,i)=>`<li role="option" data-i="${i}" aria-selected="${i===sugIdx}"><b>${d.t}</b><small>${d.e}${d.c?' - CIE-10 '+d.c:''}</small></li>`).join('')+`<li class="otro" data-i="-1">Otro (escribir libremente)</li>`;
+  ul.hidden=false;
+  ul.querySelectorAll('li').forEach(li=>li.addEventListener('mousedown',e=>{ e.preventDefault(); elegirDx(+li.dataset.i); }));
+}
+function elegirDx(i){
+  cerrarSug(); if(i<0){ $('motivo').focus(); return; }
+  const d=sugItems[i]; dxElegido=d; $('motivo').value=d.t; $('cie10').value=d.c||'';
+  $('cieInfo').textContent='Seleccionado: '+d.t+(d.c?' (CIE-10 '+d.c+')':'')+(d.o?'. '+d.o+'.':'');
+  $('motivo').dispatchEvent(new Event('input',{bubbles:true}));
+}
+$('motivo').addEventListener('input',()=>{
+  const v=$('motivo').value;
+  if(dxElegido && !v.startsWith(dxElegido.t)){ dxElegido=null; $('cie10').value=''; $('cieInfo').textContent=''; }
+  if(dxElegido){ cerrarSug(); return; }
+  sugItems=buscarDx(v); sugIdx=-1; pintarSug();
+});
+$('motivo').addEventListener('keydown',e=>{
+  if($('sugerencias').hidden) return;
+  if(e.key==='ArrowDown'){ e.preventDefault(); sugIdx=Math.min(sugIdx+1,sugItems.length-1); pintarSug(); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); sugIdx=Math.max(sugIdx-1,-1); pintarSug(); }
+  else if(e.key==='Enter' && sugIdx>=0){ e.preventDefault(); elegirDx(sugIdx); }
+  else if(e.key==='Escape'){ cerrarSug(); }
+});
+$('motivo').addEventListener('blur',()=>setTimeout(cerrarSug,150));
+const ETQ_NC='NO PUEDE RESOLVERSE EN INGAVI', ETQ_PED='SOLICITUD PEDIÁTRICA', ETQ_NOREC='DIAGNÓSTICO NO RECONOCIDO', ETQ_CONF='REQUIERE DIAGNÓSTICO CONFIRMADO';
+let ultimaCartera=null;
+const esResultadoNC=()=>!!(ultimaCartera&&ultimaCartera.servicio===NC);
 function aplicarCartera(){
+  CORRECCIONES=[];
   const c=cartera(), h=$('carteraHint'), nota=cv()&&c&&c.servicio!==NC?' ❤️ Requiere seguimiento cardiológico cercano.':'';
-  if(c){ $('especialidad').value=c.servicio;
+  ultimaCartera=c;
+  const ped=c&&c.servicio===NC&&/pediátric/i.test(c.criterio), noRec=c&&c.noReconocido, conf=c&&c.requiereConf;
+  if(c){ $('especialidad').value=c.servicio===NC ? (ped?ETQ_PED:noRec?ETQ_NOREC:conf?ETQ_CONF:ETQ_NC) : (c.valoracion?'VALORACIÓN INDIVIDUAL - ':'')+c.servicio;
     const det=c.detectado?' (detectado: «'+c.detectado+'»)':'';
     h.className='hint '+(c.servicio===NC?'mal':'ok');
     h.textContent=c.servicio===NC
-      ? '⛔ NO CORRESPONDE. '+c.criterio+det+'. Si igual desea solicitar la derivación, fundamente el motivo en Observación.'
+      ? (ped ? '⛔ Esta solicitud es pediátrica (menor de 18 años) y no puede resolverse en Ingavi. Admisión la derivará a la red correspondiente. Solo se reciben, estables, el trauma aislado de miembros y el TEC o trauma maxilofacial aislado.'
+        : conf ? '⛔ Urología solo recibe con diagnóstico confirmado (imagen o laboratorio). Confirme el diagnóstico antes de derivar; si igual desea solicitar la derivación, fundamente el motivo en Observación.'
+        : noRec ? '⛔ No se pudo identificar el diagnóstico en la cartera de Ingavi. Revise la redacción o elíjalo de la lista; si igual desea solicitar la derivación, fundamente el motivo en Observación.'
+        : '⛔ Esta solicitud no puede resolverse en Ingavi porque no cuenta con el servicio ('+c.criterio.replace(/^HEQI no cuenta con /,'')+')'+det+'. Admisión la derivará a la red correspondiente. Si igual desea solicitar la derivación, fundamente el motivo en Observación.')
       : '✅ Corresponde a '+c.servicio.toUpperCase()+'. Criterio: '+c.criterio+det+'.'+(c.alerta?' ⚠️ '+c.alerta+'.':'')+nota;
+    if(CORRECCIONES.length) h.textContent+=' ✏️ Se interpretó: '+CORRECCIONES.slice(0,3).map(([a,b])=>'«'+a+'» como «'+b+'»').join(', ')+'.';
     if(c.alerta && c.servicio!==NC) h.className='hint mal';
-  } else { $('especialidad').value=''; h.className='hint'; h.textContent='La especialidad se determinará automáticamente a partir del diagnóstico. Este campo no se puede modificar manualmente.'; }
+    if(c.valoracion && c.servicio!==NC){ h.className='hint vi'; h.textContent='🟠 VALORACIÓN INDIVIDUAL - '+c.servicio.toUpperCase()+'. '+c.criterio+det+'. El equipo de guardia evaluará si acepta el caso; fundamente el pedido en Observación.'+(c.alerta?' ⚠️ '+c.alerta+'.':'')+nota; }
+  } else { ultimaCartera=null; $('especialidad').value=''; h.className='hint'; h.textContent='La especialidad se determinará automáticamente a partir del diagnóstico. Este campo no se puede modificar manualmente.'; }
   actualizarObservacionCartera();
 }
 function actualizarObservacionCartera(){
-  const esNC=$('especialidad').value===NC;
+  const esNC=esResultadoNC()||$('especialidad').value.indexOf('VALORACIÓN INDIVIDUAL')===0;
   $('obsCarteraWrap').style.display=esNC?'':'none';
   $('obsCartera').required=esNC;
   if(!esNC){ $('obsCartera').classList.remove('invalid'); }
@@ -824,7 +982,9 @@ document.querySelectorAll('input[name=lesionDrenaje]').forEach(r=>r.addEventList
 }));
 ['motivo','dato'].forEach(id=>$(id).addEventListener('input',aplicarCartera));
 document.querySelectorAll('input[name=comorb],input[name=comorbCV]').forEach(r=>r.addEventListener('change',()=>{ if(r.checked) $('comorbNinguna').checked=false; actualizarERC(); aplicarCartera(); }));
-$('comorbNinguna').addEventListener('change',()=>{ if($('comorbNinguna').checked) document.querySelectorAll('input[name=comorb],input[name=comorbCV]').forEach(x=>x.checked=false); actualizarERC(); aplicarCartera(); });
+$('comorbNinguna').addEventListener('change',()=>{ if($('comorbNinguna').checked){ document.querySelectorAll('input[name=comorb],input[name=comorbCV]').forEach(x=>x.checked=false); $('comorbCVNinguna').checked=true; } actualizarERC(); aplicarCartera(); });
+$('comorbCVNinguna').addEventListener('change',()=>{ if($('comorbCVNinguna').checked) document.querySelectorAll('input[name=comorbCV]').forEach(x=>x.checked=false); aplicarCartera(); });
+document.querySelectorAll('input[name=comorbCV]').forEach(r=>r.addEventListener('change',()=>{ if(r.checked) $('comorbCVNinguna').checked=false; }));
 function actualizarERC(){ const on=$('comorbERC').checked; $('dialisisWrap').style.display=on?'':'none'; if(!on) document.querySelectorAll('input[name=dialisis]').forEach(x=>x.checked=false); }
 ['fc','fr','tas','spo2','temp','gcs','avdi','disp','esc2'].forEach(id=>{ const el=$(id); if(el){ el.addEventListener('input',aplicarCartera); el.addEventListener('change',aplicarCartera); } });
 $('edad').addEventListener('input',aplicarCartera);
@@ -832,11 +992,12 @@ $('edad').addEventListener('input',aplicarCartera);
 
 /* ===== Detección de fuera de cartera ===== */
 const FUERA=[
+  [/hemorragia digestiva alta|sangrado digestivo alto|\bhda\b|hematemesis|melena|varices esofagic\w*|ulcera (peptica |gastrica |duodenal )?sangrante|colangitis|cpre (de urgencia|urgente)|endoscopia (de urgencia|urgente)|cuerpo extrano (en (el )?)?(esofag\w*|gastric\w*|estomago|digestivo)|impactacion (alimentaria|esofagica)|bolo alimentario/,'endoscopia de urgencia ni CPRE de urgencia (hemorragia digestiva alta, colangitis aguda, cuerpo extraño en esófago)'],
+  [/gastrostom|\bpeg\b/,'gastrostomía (no corresponde a la urgencia)'],
+  [/infarto agudo de miocardio|\biam\b|sindrome coronario|\bsca\b|scacest|scasest|angina (inestable|de pecho)|cirugia cardiaca|cardiocirugia|revascularizacion miocardica|bypass coronario|post ?operado (cardiaco|de cirugia cardiaca)/,'unidad coronaria ni cardiocirugía'],
   [/trauma\w* ocular|lesion ocular|herida (ocular|corneal|de globo ocular|palpebral)|estallido (ocular|de globo)|perforacion ocular|cuerpo extrano (ocular|corneal|en ojo)|hifema|desprendimiento de retina|causticacion ocular|quemadura ocular/,'oftalmología (trauma ocular): excluyente aunque se acompañe de otro trauma'],
-  [/colangitis|colangitis aguda|colangitis obstructiva/,'CPRE / drenaje biliar endoscópico de urgencia (no disponible en HEQI)'],
-  [/endoscop|\bveda\b|colonoscop|gastroscop|\bcpre\b|rectosigmoidoscop|fibrobroncoscop|broncoscop|varices esofagic|gastrostom|\bpeg\b/,'endoscopia de urgencia ni ambulatoria (incluye gastrostomía)'],
   [/percutane|radiologia intervencionista|intervencionismo|multiproposito|cateter multiproposito|drenaje guiado por (eco\w*|tac|tomografia|imagen)/,'radiología intervencionista / cirugía mínimamente invasiva: drenajes percutáneos guiados o con catéter multipropósito'],
-  [/transesfenoidal|transfenoidal|trans esfenoidal|endonasal endoscopic\w*|abordaje endonasal|biopsia estereotax\w*|estereotaxi\w*/,'cirugía transesfenoidal (no hay otorrinolaringología) ni biopsia estereotáxica'],
+  [/transesfenoidal|transfenoidal|trans esfenoidal|endonasal endoscopic\w*|abordaje endonasal/,'cirugía transesfenoidal (no hay otorrinolaringología)'],
   [/angiograf|arteriograf|flebograf|hemodinamia|cateterismo|coronariograf|angioplast|emboliza|trombectomia mecanica|trombectomia endovascular|terapia endovascular/,'angiografía / hemodinamia (diagnóstica o terapéutica)'],
   [/cirugia vascular|vascular periferic|endovascular|aneurism|bypass|by-pass|isquemia arterial|diseccion aortica|diseccion de aorta|sindrome aortico|fistula arteriovenosa|\bfav\b/,'cirugía vascular compleja'],
   [/quemad|cirugia plastica|\bplastica\b|colgajo|injerto de piel/,'cirugía plástica y quemados'],
@@ -847,13 +1008,14 @@ const FUERA=[
       return !traum && (vascDiab || ampNoTraum);
     }},'manejo del pie diabético / arteriopatía obstructiva crónica (AOC) y sus amputaciones (corresponde a cirugía vascular y al programa de pie diabético)']];
 function fueraDeCartera(){
-  const t=dxNorm(['motivo','dato'].map(id=>$(id).value).join(' '));
+  // excepciones que sí corresponden: nefrostomía percutánea (Urología) y aneurisma cerebral / MAV (Neurocirugía)
+  const t=dxNorm(['motivo','dato'].map(id=>$(id).value).join(' ')).replace(/nefrostomia( percutanea)?/g,'nefrostomia_uro').replace(/aneurisma\w* (cerebral|intracraneal|intracraneano)|malformacion arterio ?venosa|aneurismatic\w*/g,'lesion_neurovascular');
   return FUERA.filter(([re])=>re.test(t)).map(([,n])=>n);
 }
 function revisarCartera(){
   const f=fueraDeCartera(), el=$('alertaCartera');
   el.style.display=f.length?'block':'none';
-  el.textContent=f.length?'⛔ HEQI no cuenta con '+f.join(' ni ')+'. Admisión responderá automáticamente NO CORRESPONDE (fuera de cartera). Derivá a un centro que lo tenga.':'';
+  el.textContent=f.length?'⛔ Ingavi no cuenta con '+f.join(' ni ')+'. Esta solicitud no puede resolverse en Ingavi; Admisión la derivará a la red correspondiente.':'';
 }
 ['motivo','dato'].forEach(id=>$(id).addEventListener('input',revisarCartera));
 
@@ -886,7 +1048,7 @@ $('bShare').addEventListener('click',async()=>{
 });
 $('bLimpiar').addEventListener('click',()=>{
   if(!confirm('¿Borrar todos los datos del formulario?'))return;
-  $('f').reset(); actualizarERC(); espManual=false; $('especialidad').disabled=true; toggleImg(); revisarCartera(); actualizarAnexoLesion(); actualizarPosop(); aplicarCartera(); actualizarObservacionCartera(); fio2Manual=false; estimarFio2(); $('labWrap').style.display='none'; $('vasoWrap').style.display='none'; avdiManual=false; lastDoc=null;
+  $('f').reset(); $('cie10').value=''; $('cieInfo').textContent=''; dxElegido=null; actualizarERC(); espManual=false; $('especialidad').disabled=true; toggleImg(); revisarCartera(); actualizarAnexoLesion(); actualizarPosop(); aplicarCartera(); actualizarObservacionCartera(); fio2Manual=false; estimarFio2(); $('labWrap').style.display='none'; $('vasoWrap').style.display='none'; avdiManual=false; lastDoc=null;
   $('avdiHint').textContent='Se completa desde el Glasgow; podés corregirlo.';
   document.querySelectorAll('.invalid').forEach(e=>e.classList.remove('invalid'));
   $('done').classList.remove('show'); setHora(); actualizarAnexoLesion(); aplicarCartera(); calc(); window.scrollTo({top:0,behavior:'smooth'});
