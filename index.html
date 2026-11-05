@@ -818,11 +818,10 @@ function cartera(){
     const miembro=/fractura|fisura|luxacion|subluxacion|esguince|contusion|trauma|amputacion|herida|lesion|golpe|caida|deformidad|aplastamiento|machucon|torcedura|traumatismo/.test(tx)
       && /brazo|antebrazo|codo|hombro|clavicula|humero|radio|cubito|muneca|mano|dedo|falange|metacarp|femur|rodilla|tibia|perone|tobillo|\bpie\b|pierna|muslo|cadera|rotula|calcaneo|metatars|supracondil|miembro|extremidad/.test(tx)
       && !/politrauma|\btec\b|\btce\b|craneo|torax|abdom|columna|vertebr|cervical|cuello|cara|facial/.test(tx);
-    if(b && b.servicio===TR && miembro && !inestable()) return Object.assign({},b,{criterio:b.criterio+' - paciente pediátrico estable con trauma aislado de miembros'});
-    const craneoCara=/\btec\b|\btce\b|traumatismo (de )?craneo|craneo ?encefal\w*|trauma\w* (de )?craneo|trauma\w* (facial|maxilofacial|de cara)|herida\w* (facial|de cara|en (la )?cara|frontal|frontoparietal|de cuero cabelludo|del labio|nasal)|fractura (nasal|de mandibula|mandibular|malar|de huesos propios)/.test(tx)
-      && !/politrauma|torax|abdom|columna|vertebr|fractura (de |del )?(femur|cadera|pelvis|tibia|humero)/.test(tx);
-    if(b && b.servicio===CG && craneoCara && !inestable()) return Object.assign({},b,{criterio:'Traumatismo craneoencefálico / maxilofacial - paciente pediátrico estable'});
-    return {servicio:NC, criterio:'Paciente pediátrico (menor de 18 años): corresponde a un centro con atención pediátrica (solo se recibe, estable, trauma aislado de miembros por Traumatología o TEC / trauma maxilofacial por Cirugía General y Trauma)'};
+    const e=String($('edad').value||'').toLowerCase(), n=parseFloat(e.replace(',','.')), soloMeses=/mes|dia|día|seman/.test(e)&&!/año|ano/.test(e);
+    const desde11=!soloMeses && !isNaN(n) && n>=11;
+    if(desde11 && b && b.servicio===TR && miembro && !inestable()) return Object.assign({},b,{criterio:b.criterio+' - paciente pediátrico estable con trauma aislado de miembros'});
+    return {servicio:NC, criterio:'Paciente pediátrico (menor de 18 años): corresponde a un centro con atención pediátrica (solo se recibe, desde los 11 años cumplidos y estable, el trauma aislado de miembros por Traumatología)'};
   }
   const c0=carteraBase(); if(!c0) return c0;
   let c=c0;
@@ -954,7 +953,7 @@ function aplicarCartera(){
     const det=c.detectado?' (detectado: «'+c.detectado+'»)':'';
     h.className='hint '+(c.servicio===NC?'mal':'ok');
     h.textContent=c.servicio===NC
-      ? (ped ? '⛔ Esta solicitud es pediátrica (menor de 18 años) y no puede resolverse en Ingavi. Favor presentar el caso a un centro de la red IPS con atención pediátrica. Solo se reciben, estables, el trauma aislado de miembros y el TEC o trauma maxilofacial aislado.'
+      ? (ped ? '⛔ Esta solicitud es pediátrica (menor de 18 años) y no puede resolverse en Ingavi. Favor presentar el caso a un centro de la red IPS con atención pediátrica. Solo se recibe, desde los 11 años cumplidos y estable, el trauma aislado de miembros (Traumatología).'
         : conf ? '⛔ Urología solo recibe con diagnóstico confirmado (imagen o laboratorio). Confirme el diagnóstico antes de derivar; si igual desea solicitar la derivación, fundamente el motivo en Observación.'
         : noRec ? '⛔ No se pudo identificar el diagnóstico en la cartera de Ingavi. Revise la redacción o elíjalo de la lista; si igual desea solicitar la derivación, fundamente el motivo en Observación.'
         : '⛔ Esta solicitud no puede resolverse en Ingavi porque no cuenta con el servicio ('+c.criterio.replace(/^HEQI no cuenta con /,'')+')'+det+'. Favor presentar el caso a un centro de la red IPS que cuente con el servicio. Si igual desea solicitar la derivación, fundamente el motivo en Observación.')
