@@ -1068,14 +1068,14 @@ $('bEnviar').addEventListener('click',async()=>{
 });
 // ===== Registro en el servidor de derivaciones (opcional) =====
 // Pegar acá la dirección del servidor, por ejemplo 'https://derivaciones-heqi.up.railway.app'. Vacío = no se envía.
-const API_URL='';
-const API_TOKEN='';
+const API_URL='https://heqi-servidor.vercel.app';
+const API_TOKEN='heqiform2026';
 async function enviarServidor(blob,nombre,d){
   if(!API_URL) return null;
   try{
     const fd=new FormData();
     fd.append('datos',JSON.stringify({paciente:d.nombre,ci:d.ci,edad:d.edad,institucion:d.institucion,medico:d.medico,telefono:d.telefono,
-      diagnostico:d.motivo,cie10:d.cie10,especialidad:d.especialidad,criterio:d.criterio_cartera,news2:d.news2,sofa:d.sofa,alerta:d.alerta,rea:d.rea||''}));
+      diagnostico:d.motivo,cie10:d.cie10,especialidad:d.especialidad,criterio:d.criterio_cartera,news2:d.news2,sofa:d.sofa,complejidad:((d._news&&((d._news.total||0)>=7||Object.values(d._news.p||{}).some(x=>x===3)))?'Alta':(d._news&&(d._news.total||0)>=5)?'Media':'Baja'),alerta:d.alerta,rea:d.rea||''}));
     fd.append('pdf',blob,nombre);
     const r=await fetch(API_URL.replace(/\/$/,'')+'/api/derivaciones',{method:'POST',headers:API_TOKEN?{'X-Form-Token':API_TOKEN}:{},body:fd});
     return r.ok;
