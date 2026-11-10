@@ -119,11 +119,12 @@ button:focus-visible{outline:3px solid rgba(36,71,154,.45);outline-offset:2px}
 <div class="wrap">
 <header>
   <p class="inst">HEQI: Regulación Médica de Traslados</p>
-  <h1>Formulario de Derivación <small style="font-size:.55em;opacity:.6;font-weight:400">v41</small></h1>
+  <h1>Formulario de Derivación <small style="font-size:.55em;opacity:.6;font-weight:400">v42</small></h1>
   <p class="sub">Solicitud de interconsulta / traslado a servicios de urgencia quirúrgica</p>
   <div class="lock">🔒 Uso estrictamente médico — prohibido el llenado por familiares</div>
 </header>
 <div class="rule"></div>
+<div id="verAviso" class="note warn" style="display:none;font-weight:700">⚠️ Este formulario está desactualizado y no puede generar el PDF. <button type="button" class="btn-pri" id="bRecargar" style="margin-top:10px;width:100%">Actualizar formulario</button></div>
 <div id="jsEstado" class="note warn" style="font-weight:700">⚠️ El cálculo automático y el PDF no están funcionando en este visor. Abrí el formulario desde el enlace en Chrome.</div>
 
 <div class="note info">Puede tardar unos minutos, ya que es recepcionado por médicos de guardia asistencial (pueden estar en consultas o procedimientos).</div>
@@ -420,7 +421,7 @@ function news2(){
 
 /* ===== SOFA ===== */
 // ===== Criterios de ingreso a Reanimación (protocolo HEQI) =====
-const FORM_VERSION='v41';
+const FORM_VERSION='v42';
 function criteriosREA(){
   const ob=[], al=[];
   const disp=$('disp').value, gcs=num('gcs'), spo2=num('spo2');
@@ -1115,7 +1116,9 @@ document.querySelectorAll('input[name=tieneLab]').forEach(r=>r.addEventListener(
 /* ===== Generar PDF ===== */
 $('bEnviar').addEventListener('click',async()=>{
   if(!validar())return;
-  const b=$('bEnviar'); b.disabled=true; b.textContent='Generando…';
+  const b=$('bEnviar'); b.disabled=true; b.textContent='Verificando…';
+  if(!(await permitirPDF())){ b.disabled=false; b.textContent='GENERAR PDF'; return; }
+  b.textContent='Generando…';
   const d=collect(); let err='';
   let reg=null;
   try{ lastDoc=await buildPDF(d); lastName=fileName(d); descargar(lastDoc,lastName); reg=await enviarServidor(lastDoc,lastName,d); }catch(e){ lastDoc=null; err=String(e&&e.message||e); }
@@ -1161,10 +1164,35 @@ async function reenviarCola(){
   try{ localStorage.setItem(COLA_KEY,JSON.stringify(quedan)); }catch(e){}
 }
 window.addEventListener('load',()=>setTimeout(reenviarCola,3000));
-async function asegurarPDF(){ if(!lastDoc){ const d=collect(); lastDoc=await buildPDF(d); lastName=fileName(d);} }
-$('bDesc').addEventListener('click',async()=>{ try{ await asegurarPDF(); descargar(lastDoc,lastName); toast('PDF descargado'); }catch(e){ toast('Error al generar el PDF: '+(e.message||e)); } });
+// ===== Control de versión con el servidor =====
+// Antes de generar un PDF se consulta la versión mínima vigente. Si este formulario es más viejo, o no hay conexión, no se genera.
+function nroVersion(v){ const m=String(v||'').match(/\d+/); return m?parseInt(m[0],10):0; }
+async function verificarVersion(){
+  try{
+    const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),8000);
+    const r=await fetch(API_URL.replace(/\/$/,'')+'/api/form-version?t='+Date.now(),{cache:'no-store',signal:ctl.signal});
+    clearTimeout(t);
+    if(!r.ok) return 'sinConexion';
+    const j=await r.json();
+    return nroVersion(FORM_VERSION)>=nroVersion(j.minima) ? 'ok' : 'vieja';
+  }catch(e){ return 'sinConexion'; }
+}
+function mostrarDesactualizado(){ const a=$('verAviso'); a.style.display='block'; a.scrollIntoView({behavior:'smooth',block:'center'}); }
+async function permitirPDF(){
+  const v=await verificarVersion();
+  if(v==='ok') return true;
+  if(v==='vieja'){ mostrarDesactualizado(); toast('Formulario desactualizado: tocá Actualizar formulario'); }
+  else toast('Sin conexión: no se pudo verificar la versión del formulario. Revisá internet y probá de nuevo.');
+  return false;
+}
+$('bRecargar').addEventListener('click',()=>{ location.replace(location.pathname+'?v='+Date.now()); });
+async function chequeoSilencioso(){ if(await verificarVersion()==='vieja') $('verAviso').style.display='block'; }
+window.addEventListener('load',()=>setTimeout(chequeoSilencioso,500));
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') chequeoSilencioso(); });
+async function asegurarPDF(){ if(!lastDoc){ if(!(await permitirPDF())) throw new Error('Formulario sin verificar'); const d=collect(); lastDoc=await buildPDF(d); lastName=fileName(d);} }
+$('bDesc').addEventListener('click',async()=>{ try{ await asegurarPDF(); descargar(lastDoc,lastName); toast('PDF descargado'); }catch(e){ if(String(e.message)!=='Formulario sin verificar') toast('Error al generar el PDF: '+(e.message||e)); } });
 $('bShare').addEventListener('click',async()=>{
-  try{ await asegurarPDF(); }catch(e){ toast('Error al generar el PDF: '+(e.message||e)); return; }
+  try{ await asegurarPDF(); }catch(e){ if(String(e.message)!=='Formulario sin verificar') toast('Error al generar el PDF: '+(e.message||e)); return; }
   const file=new File([lastDoc],lastName,{type:'application/pdf'});
   if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:lastName,text:textoCompartir(collect())}); }catch(e){} }
   else { descargar(lastDoc,lastName); toast('Adjuntá en WhatsApp el PDF descargado'); }
